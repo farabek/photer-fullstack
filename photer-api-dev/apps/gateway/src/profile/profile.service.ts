@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileOutputDto } from './dto/profile-output.dto';
+import { Profile } from '@prisma/client'; // Добавляем импорт типа Profile
 
 @Injectable()
 export class ProfileService {
@@ -20,98 +21,78 @@ export class ProfileService {
     createProfileDto: CreateProfileDto,
     userId: string,
   ): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error(
-      'Profile functionality temporarily disabled - model not in schema',
-    );
-
     // Проверяем, не существует ли уже профиль для этого пользователя
-    // const existingProfile = await this.prisma.profile.findUnique({
-    //   where: { userId },
-    // });
+    const existingProfile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
 
-    // if (existingProfile) {
-    //   throw new ConflictException('Profile already exists for this user');
-    // }
+    if (existingProfile) {
+      throw new ConflictException('Profile already exists for this user');
+    }
 
-    // // Проверяем, не занят ли username другим пользователем
-    // const existingUsername = await this.prisma.profile.findUnique({
-    //   where: { username: createProfileDto.username },
-    // });
+    // Проверяем, не занят ли username другим пользователем
+    const existingUsername = await this.prisma.profile.findUnique({
+      where: { username: createProfileDto.username },
+    });
 
-    // if (existingUsername) {
-    //   throw new ConflictException('Username is already taken');
-    // }
+    if (existingUsername) {
+      throw new ConflictException('Username is already taken');
+    }
 
-    // const profile = await this.prisma.profile.create({
-    //   data: {
-    //     ...createProfileDto,
-    //     userId,
-    //     avatarUrl: [], // Инициализируем пустым массивом
-    //   },
-    // });
+    const profile = await this.prisma.profile.create({
+      data: {
+        ...createProfileDto,
+        userId,
+        avatarUrl: [], // Инициализируем пустым массивом
+      },
+    });
 
-    // return this.mapToProfileOutputDto(profile);
+    return this.mapToProfileOutputDto(profile);
   }
 
   /**
    * Получает профиль текущего пользователя
    */
   async getCurrentUserProfile(userId: string): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error(
-      'Profile functionality temporarily disabled - model not in schema',
-    );
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
 
-    // const profile = await this.prisma.profile.findUnique({
-    //   where: { userId },
-    // });
+    if (!profile) {
+      throw new NotFoundException('Profile not found');
+    }
 
-    // if (!profile) {
-    //   throw new NotFoundException('Profile not found');
-    // }
-
-    // return this.mapToProfileOutputDto(profile);
+    return this.mapToProfileOutputDto(profile);
   }
 
   /**
    * Получает профиль по ID профиля
    */
   async getProfileById(id: string): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error(
-      'Profile functionality temporarily disabled - model not in schema',
-    );
+    const profile = await this.prisma.profile.findUnique({
+      where: { id },
+    });
 
-    // const profile = await this.prisma.profile.findUnique({
-    //   where: { id },
-    // });
+    if (!profile) {
+      throw new NotFoundException('Profile not found');
+    }
 
-    // if (!profile) {
-    //   throw new NotFoundException('Profile not found');
-    // }
-
-    // return this.mapToProfileOutputDto(profile);
+    return this.mapToProfileOutputDto(profile);
   }
 
   /**
    * Получает профиль по ID пользователя
    */
   async getProfileByUserId(userId: string): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error(
-      'Profile functionality temporarily disabled - model not in schema',
-    );
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
 
-    // const profile = await this.prisma.profile.findUnique({
-    //   where: { userId },
-    // });
+    if (!profile) {
+      throw new NotFoundException('Profile not found');
+    }
 
-    // if (!profile) {
-    //   throw new NotFoundException('Profile not found');
-    // }
-
-    // return this.mapToProfileOutputDto(profile);
+    return this.mapToProfileOutputDto(profile);
   }
 
   /**
@@ -122,66 +103,56 @@ export class ProfileService {
     updateProfileDto: UpdateProfileDto,
     userId: string,
   ): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error(
-      'Profile functionality temporarily disabled - model not in schema',
-    );
+    const profile = await this.prisma.profile.findUnique({
+      where: { id },
+    });
 
-    // const profile = await this.prisma.profile.findUnique({
-    //   where: { id },
-    // });
+    if (!profile) {
+      throw new NotFoundException('Profile not found');
+    }
 
-    // if (!profile) {
-    //   throw new NotFoundException('Profile not found');
-    // }
+    // Проверяем, что пользователь обновляет свой профиль
+    if (profile.userId !== userId) {
+      throw new ForbiddenException('You can only update your own profile');
+    }
 
-    // // Проверяем, что пользователь обновляет свой профиль
-    // if (profile.userId !== userId) {
-    //   throw new ForbiddenException('You can only update your own profile');
-    // }
+    // Если обновляется username, проверяем его уникальность
+    if (
+      updateProfileDto.username &&
+      updateProfileDto.username !== profile.username
+    ) {
+      const existingUsername = await this.prisma.profile.findUnique({
+        where: { username: updateProfileDto.username },
+      });
 
-    // // Если обновляется username, проверяем его уникальность
-    // if (
-    //   updateProfileDto.username &&
-    //   updateProfileDto.username !== profile.username
-    // ) {
-    //   const existingUsername = await this.prisma.profile.findUnique({
-    //     where: { username: updateProfileDto.username },
-    //   });
+      if (existingUsername) {
+        throw new ConflictException('Username is already taken');
+      }
+    }
 
-    //   if (existingUsername) {
-    //     throw new ConflictException('Username is already taken');
-    //   }
-    // }
+    const updatedProfile = await this.prisma.profile.update({
+      where: { id },
+      data: updateProfileDto,
+    });
 
-    // const updatedProfile = await this.prisma.profile.update({
-    //   where: { id },
-    //   data: updateProfileDto,
-    // });
-
-    // return this.mapToProfileOutputDto(updatedProfile);
+    return this.mapToProfileOutputDto(updatedProfile);
   }
 
   /**
    * Удаляет профиль пользователя (для тестирования)
    */
   async deleteProfile(userId: string): Promise<void> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error(
-      'Profile functionality temporarily disabled - model not in schema',
-    );
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
 
-    // const profile = await this.prisma.profile.findUnique({
-    //   where: { userId },
-    // });
+    if (!profile) {
+      throw new NotFoundException('Profile not found');
+    }
 
-    // if (!profile) {
-    //   throw new NotFoundException('Profile not found');
-    // }
-
-    // await this.prisma.profile.delete({
-    //   where: { userId },
-    // });
+    await this.prisma.profile.delete({
+      where: { userId },
+    });
   }
 
   /**
@@ -191,34 +162,29 @@ export class ProfileService {
     userId: string,
     fileUrl: string,
   ): Promise<{ fileUrl: string }> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error(
-      'Profile functionality temporarily disabled - model not in schema',
-    );
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
 
-    // const profile = await this.prisma.profile.findUnique({
-    //   where: { userId },
-    // });
+    if (!profile) {
+      throw new NotFoundException('Profile not found');
+    }
 
-    // if (!profile) {
-    //   throw new NotFoundException('Profile not found');
-    // }
+    // Добавляем новый URL аватара в массив
+    const updatedAvatarUrls = [...profile.avatarUrl, fileUrl];
 
-    // // Добавляем новый URL аватара в массив
-    // const updatedAvatarUrls = [...profile.avatarUrl, fileUrl];
+    await this.prisma.profile.update({
+      where: { userId },
+      data: { avatarUrl: updatedAvatarUrls },
+    });
 
-    // await this.prisma.profile.update({
-    //   where: { userId },
-    //   data: { avatarUrl: updatedAvatarUrls },
-    // });
-
-    // return { fileUrl };
+    return { fileUrl };
   }
 
   /**
    * Преобразует данные из Prisma в ProfileOutputDto
    */
-  private mapToProfileOutputDto(profile: any): ProfileOutputDto {
+  private mapToProfileOutputDto(profile: Profile): ProfileOutputDto {
     return {
       id: profile.id,
       username: profile.username,
@@ -226,7 +192,7 @@ export class ProfileService {
       lastName: profile.lastName,
       city: profile.city,
       country: profile.country,
-      birthDate: profile.birthDate,
+      birthDate: profile.birthDate?.toISOString() || null,
       aboutMe: profile.aboutMe,
       avatarUrl: profile.avatarUrl,
       createdAt: profile.createdAt.toISOString(),

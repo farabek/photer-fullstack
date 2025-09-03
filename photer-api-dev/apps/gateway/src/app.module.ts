@@ -4,7 +4,9 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { SecurityModule } from './security/security.module';
-// import { ProfileModule } from './profile/profile.module'; // Временно отключено
+import { ProfileModule } from './profile/profile.module'; // Раскомментировано
+import { PostsModule } from './posts/posts.module'; // Добавлен Posts модуль
+import { SubscriptionsModule } from './subscriptions/subscriptions.module'; // Добавлен Subscriptions модуль
 
 @Module({
   imports: [
@@ -20,7 +22,9 @@ import { SecurityModule } from './security/security.module';
     AuthModule,
     UsersModule,
     SecurityModule,
-    // ProfileModule, // Временно отключено
+    ProfileModule, // Раскомментировано
+    PostsModule, // Добавлен Posts модуль
+    SubscriptionsModule, // Добавлен Subscriptions модуль
   ],
 })
 export class AppModule {}

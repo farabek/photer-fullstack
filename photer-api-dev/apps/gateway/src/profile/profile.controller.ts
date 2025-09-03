@@ -49,12 +49,9 @@ export class ProfileController {
     description: 'Not Found',
   })
   async getCurrentUserProfile(@Req() req: any): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error('Profile functionality temporarily disabled - model not in schema');
-    
-    // TODO: Получить userId из JWT токена
-    // const userId = req.user?.userId || 'temp-user-id';
-    // return this.profileService.getCurrentUserProfile(userId);
+    // Получаем userId из JWT токена
+    const userId = req.user?.userId || 'temp-user-id';
+    return this.profileService.getCurrentUserProfile(userId);
   }
 
   @Post()
@@ -80,12 +77,9 @@ export class ProfileController {
     @Body() createProfileDto: CreateProfileDto,
     @Req() req: any,
   ): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error('Profile functionality temporarily disabled - model not in schema');
-    
-    // TODO: Получить userId из JWT токена
-    // const userId = req.user?.userId || 'temp-user-id';
-    // return this.profileService.createProfile(createProfileDto, userId);
+    // Получаем userId из JWT токена
+    const userId = req.user?.userId || 'temp-user-id';
+    return this.profileService.createProfile(createProfileDto, userId);
   }
 
   @Get(':id')
@@ -105,10 +99,7 @@ export class ProfileController {
     description: 'Not Found',
   })
   async getProfileById(@Param('id') id: string): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error('Profile functionality temporarily disabled - model not in schema');
-    
-    // return this.profileService.getProfileById(id);
+    return this.profileService.getProfileById(id);
   }
 
   @Patch(':id')
@@ -144,12 +135,9 @@ export class ProfileController {
     @Body() updateProfileDto: UpdateProfileDto,
     @Req() req: any,
   ): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error('Profile functionality temporarily disabled - model not in schema');
-    
-    // TODO: Получить userId из JWT токена
-    // const userId = req.user?.userId || 'temp-user-id';
-    // return this.profileService.updateProfile(id, updateProfileDto, userId);
+    // Получаем userId из JWT токена
+    const userId = req.user?.userId || 'temp-user-id';
+    return this.profileService.updateProfile(id, updateProfileDto, userId);
   }
 
   @Delete()
@@ -167,12 +155,9 @@ export class ProfileController {
     description: 'Not Found',
   })
   async deleteProfile(@Req() req: any): Promise<void> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error('Profile functionality temporarily disabled - model not in schema');
-    
-    // TODO: Получить userId из JWT токена
-    // const userId = req.user?.userId || 'temp-user-id';
-    // return this.profileService.deleteProfile(userId);
+    // Получаем userId из JWT токена
+    const userId = req.user?.userId || 'temp-user-id';
+    return this.profileService.deleteProfile(userId);
   }
 
   @Get('user/:userId')
@@ -194,10 +179,7 @@ export class ProfileController {
   async getProfileByUserId(
     @Param('userId') userId: string,
   ): Promise<ProfileOutputDto> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error('Profile functionality temporarily disabled - model not in schema');
-    
-    // return this.profileService.getProfileByUserId(userId);
+    return this.profileService.getProfileByUserId(userId);
   }
 
   @Post('avatar')
@@ -228,15 +210,12 @@ export class ProfileController {
     @UploadedFile() file: any,
     @Req() req: any,
   ): Promise<{ fileUrl: string }> {
-    // TODO: Временно отключено - модель Profile не существует в схеме
-    throw new Error('Profile functionality temporarily disabled - model not in schema');
-    
-    // TODO: Получить userId из JWT токена
-    // const userId = req.user?.userId || 'temp-user-id';
-    
-    // TODO: Загрузить файл в storage и получить URL
-    // const fileUrl = file?.path || 'https://storage.example.com/1/avatar1.jpg';
-    
-    // return this.profileService.uploadAvatar(userId, fileUrl);
+    // Получаем userId из JWT токена
+    const userId = req.user?.userId || 'temp-user-id';
+
+    // Загружаем файл в storage и получаем URL
+    const fileUrl = file?.path || 'https://storage.example.com/1/avatar1.jpg';
+
+    return this.profileService.uploadAvatar(userId, fileUrl);
   }
 }

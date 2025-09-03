@@ -12,27 +12,42 @@ datasource db {
 
 model User {
   id                String   @id @default(cuid())
-  // Добавляем поле username для уникальной идентификации пользователя
-  // Это поле будет использоваться в URL профиля и для логина
   username          String   @unique
   email             String   @unique
-  // Убираем поле name, так как теперь используем username
-  password          String?
+  password          String
+  emailConfirmed    Boolean  @default(false)
+  confirmationCode  String?  @unique
+  confirmationExpires DateTime?
+  recoveryCode      String?  @unique
+  recoveryExpires   DateTime?
   oauthProvider     String?
   oauthId           String?
-  // Добавляем поля для подтверждения email
-  emailConfirmed    Boolean  @default(false)  // Статус подтверждения email
-  confirmationCode  String?  @unique          // Уникальный код для подтверждения
-  confirmationExpires DateTime?               // Время истечения кода подтверждения
-  // Добавляем поля для восстановления пароля
-  recoveryCode      String?  @unique          // Уникальный код для восстановления пароля
-  recoveryExpires   DateTime?                 // Время истечения кода восстановления
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  photos Photo[]
+  // Relations
+  profile Profile?
+  photos  Photo[]
+  subscriptions Subscription[]
+  payments Payment[]
+}
 
-  @@map("users")
+model Profile {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  firstName String?
+  lastName  String?
+  city      String?
+  country   String?
+  birthDate DateTime?
+  aboutMe   String?
+  avatarUrl String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
 }
 
 model Photo {
@@ -41,11 +56,44 @@ model Photo {
   description String?
   url         String
   tags        String?
-  userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+}
 
-  @@map("photos")
+model Subscription {
+  id              Int      @id @default(autoincrement())
+  userId          String
+  status          String   @default("PENDING") // PENDING, ACTIVE, EXPIRED, CANCELLED
+  accountType     String   @default("PERSONAL") // PERSONAL, BUSINESS, ENTERPRISE
+  validUntil      DateTime
+  autoRenewal     Boolean  @default(true)
+  paymentProvider String   // STRIPE, PAYPAL
+  externalId      String   @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+}
+
+model Payment {
+  id                    String   @id @default(cuid())
+  userId                String
+  subscriptionId        String
+  dateOfPayment         DateTime @default(now())
+  endDateOfSubscription DateTime
+  price                 Float
+  subscriptionType      String
+  paymentType           String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId], references: [externalId], onDelete: Cascade)
 }
