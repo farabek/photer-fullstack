@@ -40,6 +40,7 @@ The API will be available at `http://localhost:3001`
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - Next.js 14
 - TypeScript
 - Tailwind CSS
@@ -47,15 +48,16 @@ The API will be available at `http://localhost:3001`
 - React
 
 ### Backend
+
 - NestJS
 - Prisma ORM
-- SQLite (development)
+- PostgreSQL (production)
 - JWT Authentication
 - OAuth (Google, GitHub)
 
 ## 📁 Project Structure
 
-```
+```text
 photer-fullstack/
 ├── photer-app-dev/          # Next.js frontend
 │   ├── src/
@@ -80,13 +82,15 @@ photer-fullstack/
 Create `.env` files in both frontend and backend directories:
 
 ### Frontend (.env.local)
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
 ### Backend (.env)
+
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://photer_user:photer_password@localhost:5432/photer_dev?schema=public"
 JWT_SECRET="your-secret-key"
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
@@ -96,36 +100,40 @@ GITHUB_CLIENT_SECRET="your-github-client-secret"
 
 ## 🗄️ Database
 
-The application uses SQLite for development with Prisma ORM. Run migrations with:
+The application uses PostgreSQL for production with Prisma ORM. For development setup, see the detailed instructions in `photer-api-dev/SETUP-POSTGRES.md`.
+
+Run database operations with:
 
 ```bash
 cd photer-api-dev
-npx prisma migrate dev
+npx prisma db push
 npx prisma generate
 ```
 
 ## 🚀 Development
 
 ### Start both applications
+
 ```bash
 # Terminal 1 - Backend
 cd photer-api-dev
-npm run start:dev
+yarn start:dev:gateway
 
 # Terminal 2 - Frontend
 cd photer-app-dev
-npm run dev
+yarn dev
 ```
 
 ### Build for production
+
 ```bash
 # Frontend
 cd photer-app-dev
-npm run build
+yarn build
 
 # Backend
 cd photer-api-dev
-npm run build
+yarn build:all
 ```
 
 ## 📝 License
