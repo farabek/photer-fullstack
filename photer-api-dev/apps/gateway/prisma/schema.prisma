@@ -6,19 +6,29 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String
-  password      String?
-  oauthProvider String?
-  oauthId       String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                String   @id @default(cuid())
+  // Добавляем поле username для уникальной идентификации пользователя
+  // Это поле будет использоваться в URL профиля и для логина
+  username          String   @unique
+  email             String   @unique
+  // Убираем поле name, так как теперь используем username
+  password          String?
+  oauthProvider     String?
+  oauthId           String?
+  // Добавляем поля для подтверждения email
+  emailConfirmed    Boolean  @default(false)  // Статус подтверждения email
+  confirmationCode  String?  @unique          // Уникальный код для подтверждения
+  confirmationExpires DateTime?               // Время истечения кода подтверждения
+  // Добавляем поля для восстановления пароля
+  recoveryCode      String?  @unique          // Уникальный код для восстановления пароля
+  recoveryExpires   DateTime?                 // Время истечения кода восстановления
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   photos Photo[]
 

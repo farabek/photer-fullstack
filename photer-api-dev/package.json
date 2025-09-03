@@ -5,9 +5,6 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
-  "prisma": {
-    "seed": "ts-node ./apps/gateway/prisma/seed.ts"
-  },
   "scripts": {
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "build:all": "nest build",
@@ -22,6 +19,11 @@
     "start:prod:storage": "node dist/apps/storage/main",
     "migrate:dev": "npx prisma migrate deploy",
     "migrate:prod": "npx prisma migrate deploy",
+    "prisma:studio": "npx prisma studio --schema=./apps/gateway/prisma/schema.prisma",
+    "prisma:generate": "npx prisma generate --schema=./apps/gateway/prisma/schema.prisma",
+    "prisma:migrate": "npx prisma migrate dev --schema=./apps/gateway/prisma/schema.prisma",
+    "prisma:reset": "npx prisma migrate reset --schema=./apps/gateway/prisma/schema.prisma",
+    "prisma:deploy": "npx prisma migrate deploy --schema=./apps/gateway/prisma/schema.prisma",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest --passWithNoTests --detectOpenHandles",
     "test:watch": "jest --watch",
@@ -30,7 +32,7 @@
     "test:e2e:gateway": "jest --config ./apps/gateway/test/jest-e2e.json",
     "test:e2e:storage": "jest --config ./apps/storage/test/jest-e2e.json --detectOpenHandles",
     "db:reset": "prisma migrate reset",
-    "db:seed": "ts-node apps/gateway/prisma/seed.ts"
+    "db:seed": "ts-node --project apps/gateway/prisma/tsconfig.json apps/gateway/prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.782.0",
@@ -45,7 +47,7 @@
     "@nestjs/platform-express": "^11.0.12",
     "@nestjs/swagger": "^11.0.3",
     "@nestjs/throttler": "^6.4.0",
-    "@prisma/client": "^6.4.1",
+    "@prisma/client": "^6.15.0",
     "@types/mongoose": "^5.11.97",
     "@types/multer": "^1.4.12",
     "amqp-connection-manager": "^4.1.14",
@@ -58,6 +60,7 @@
     "cookie-parser": "^1.4.7",
     "cross-env": "^7.0.3",
     "date-fns": "^4.1.0",
+    "helmet": "^8.1.0",
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.1",
     "multer": "^1.4.5-lts.2",
@@ -73,6 +76,7 @@
     "sharp": "^0.34.0",
     "streamifier": "^0.1.1",
     "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0",
     "uuidv4": "^6.2.13"
   },
   "devDependencies": {
@@ -88,12 +92,14 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/supertest": "^6.0.0",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.5.0",
+    "markdownlint-cli": "^0.45.0",
     "prettier": "^3.0.0",
     "prisma": "^6.4.1",
     "source-map-support": "^0.5.21",

@@ -18,6 +18,7 @@ export default function LogIn(): ReactElement {
     handleSubmit,
     isDirty,
     hasLoginError,
+    loginErrorMessage,
     formErrors,
     isLoading,
   } = useLogInForm();
@@ -30,12 +31,13 @@ export default function LogIn(): ReactElement {
       )}
     >
       <h1 className="h1-text text-center">Sign In</h1>
-      <OAuthLinks />
+      <OAuthLinks data-testid="oauth-links" />
       <div className="mt-6 flex w-full flex-col justify-center align-middle">
         <form onSubmit={handleSubmit} className={'flex flex-col items-end'}>
-          {hasLoginError && (
+          {(hasLoginError || loginErrorMessage) && (
             <p className={'text-danger-500 text-center'}>
-              The email or password are incorrect. Try again please
+              {loginErrorMessage ||
+                'The email or password are incorrect. Try again please'}
             </p>
           )}
           <Input
@@ -51,9 +53,14 @@ export default function LogIn(): ReactElement {
             errorMessage={formErrors.password?.message}
             {...register('password')}
           />
-          <Link href="/forgot-password" className={'text-light-900'}>
-            Forgot Password
-          </Link>
+          <div className="flex w-full justify-between">
+            <Link href="/forgot-password" className={'text-light-900'}>
+              Forgot Password
+            </Link>
+            <Link href="/resend-link" className={'text-light-900'}>
+              Resend Confirmation
+            </Link>
+          </div>
           {/* Кнопка входа с состоянием загрузки и редиректа */}
           <Button
             className="my-5 w-full"
@@ -68,7 +75,7 @@ export default function LogIn(): ReactElement {
             {isLoading ? (
               // Состояние загрузки: спиннер + сообщение (показывается до перехода на профиль)
               <div className="flex items-center justify-center gap-2">
-                <Spinner size={16} />
+                <Spinner data-testid="spinner" size={16} />
                 <span>Вход в систему...</span>
               </div>
             ) : (

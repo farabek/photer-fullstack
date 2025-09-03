@@ -33,6 +33,7 @@ export const Sidebar = (): React.JSX.Element | null => {
 
   return (
     <aside
+      data-testid="sidebar"
       className={cn(
         'sticky top-[60px] left-0 flex h-[calc(100vh-60px)] w-60 flex-col justify-between border-r-2 border-zinc-700 bg-black text-slate-50 transition-all duration-300',
         {

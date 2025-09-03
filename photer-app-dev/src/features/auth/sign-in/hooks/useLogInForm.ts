@@ -14,11 +14,13 @@ export function useLogInForm(): {
   handleSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
   isDirty: boolean;
   hasLoginError: boolean;
+  loginErrorMessage: string;
   formErrors: ReturnType<typeof useForm<LogInSchema>>['formState']['errors'];
   isLoading: boolean;
 } {
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false); // Состояние для отслеживания редиректа
+  const [loginErrorMessage, setLoginErrorMessage] = useState(''); // Сообщение об ошибке входа
 
   const {
     register,
@@ -49,8 +51,22 @@ export function useLogInForm(): {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       router.push(`/profile/${userId}`);
-    } catch (err) {
+    } catch (err: any) {
       console.log('Login failed:', err);
+
+      // Обрабатываем различные типы ошибок
+      if (err?.data?.message) {
+        setLoginErrorMessage(err.data.message);
+      } else if (err?.status === 401) {
+        setLoginErrorMessage(
+          'Email not confirmed. Please check your email and confirm your account.'
+        );
+      } else if (err?.status === 400) {
+        setLoginErrorMessage('Invalid email or password.');
+      } else {
+        setLoginErrorMessage('Login failed. Please try again.');
+      }
+
       // Сбрасываем состояние редиректа в случае ошибки
       setIsRedirecting(false);
     }
@@ -64,6 +80,7 @@ export function useLogInForm(): {
     handleSubmit: handleSubmit(onSubmit),
     isDirty,
     hasLoginError: isError,
+    loginErrorMessage,
     formErrors: errors,
     isLoading: isFormLoading, // Используем комбинированное состояние
   };

@@ -1,0 +1,88 @@
+import { useAppDispatch } from '@/shared/state/store';
+import { ChangeEvent, useCallback } from 'react';
+import { toast } from 'react-toastify';
+import { addPhotos } from '../../model/postSlice';
+
+export type PhotoData = {
+  url: string;
+  crop: { x: number; y: number };
+  zoom: number;
+  rotation: number;
+  croppedAreaPixels: null;
+  naturalAspect: number;
+  originalWidth: number;
+  originalHeight: number;
+};
+
+export const MAX_FILE_SIZE_MB = 20;
+export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+export function useUploadPhotos(): {
+  handleFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+} {
+  const dispatch = useAppDispatch();
+
+  const handleFileChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>): void => {
+      const input = event.currentTarget;
+      const files = event.target.files;
+
+      if (!files || files.length === 0) {
+        return;
+      }
+
+      const oversizedFiles = Array.from(files).filter(
+        (file) => file.size > MAX_FILE_SIZE_BYTES
+      );
+      if (oversizedFiles.length > 0) {
+        toast.error(
+          `The photo must be less than ${MAX_FILE_SIZE_MB}Mb and have JPEG or PNG format`
+        );
+        input.value = '';
+        return;
+      }
+
+      const newPhotosPromises = Array.from(files).map((file) => {
+        return new Promise<PhotoData>((resolve) => {
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+
+          img.onload = (): void => {
+            resolve({
+              url,
+              crop: { x: 0, y: 0 },
+              zoom: 1,
+              rotation: 0,
+              croppedAreaPixels: null,
+              naturalAspect: img.naturalWidth / img.naturalHeight,
+              originalWidth: img.naturalWidth,
+              originalHeight: img.naturalHeight,
+            });
+          };
+
+          img.onerror = (): void => {
+            resolve({
+              url,
+              crop: { x: 0, y: 0 },
+              zoom: 1,
+              rotation: 0,
+              croppedAreaPixels: null,
+              naturalAspect: 1,
+              originalWidth: 100,
+              originalHeight: 100,
+            });
+          };
+
+          img.src = url;
+        });
+      });
+
+      Promise.all(newPhotosPromises).then((newPhotos) => {
+        dispatch(addPhotos(newPhotos));
+      });
+    },
+    [dispatch]
+  );
+
+  return { handleFileChange };
+}

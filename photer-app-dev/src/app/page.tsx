@@ -1,68 +1,60 @@
-'use client';
+// src/app/page.tsx
+import { ReactElement } from 'react';
+import { UsersCount } from '@/entities/user/ui/UsersCount';
+import { Posts } from '@/features/posts/lib/post.types';
+import { Toaster } from '@/shared/ui';
+import { PublicPostItem } from '@/features/posts/ui/public-post/PublicPostItem';
 
-import { useState } from 'react';
-import { PhotoUpload } from '@/components/PhotoUpload';
-import { PhotoGrid } from '@/components/PhotoGrid';
-import { PhotoFilters } from '@/components/PhotoFilters';
-import { Header } from '@/components/Header';
-import { Photo, PhotoFilters as PhotoFiltersType } from '@/types/photo';
+async function getUsersCount(): Promise<number> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/users/count`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch users count.');
+  }
+  return res.json();
+}
 
-export default function HomePage() {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [filters, setFilters] = useState<PhotoFiltersType>({});
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'name' | 'date' | 'size' | 'type'>(
-    'date'
+async function getPosts(): Promise<Posts> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/posts?pageNumber=1&pageSize=4&sortDirection=desc&sortBy=createdAt`
   );
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  if (!res.ok) {
+    throw new Error('Failed to fetch posts.');
+  }
+  return res.json();
+}
 
-  const handlePhotoUpload = (newPhotos: Photo[]) => {
-    setPhotos((prev) => [...prev, ...newPhotos]);
-  };
+export const revalidate = 60;
 
-  const handlePhotoDelete = (photoId: string) => {
-    setPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
-  };
+export default async function HomePage(): Promise<ReactElement> {
+  const usersCountData = getUsersCount();
+  const postsData = getPosts();
+
+  const [usersCountResult, postsResult] = await Promise.allSettled([
+    usersCountData,
+    postsData,
+  ]);
+
+  const usersCount =
+    usersCountResult.status === 'fulfilled' ? usersCountResult.value : 0;
+  const posts =
+    postsResult.status === 'fulfilled' ? postsResult.value.items : [];
+
+  const errors: string[] = [
+    usersCountResult.status === 'rejected'
+      ? usersCountResult.reason.message
+      : null,
+    postsResult.status === 'rejected' ? postsResult.reason.message : null,
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center">
-            <h1 className="mb-4 text-4xl font-bold text-gray-900">
-              Welcome to Photer App
-            </h1>
-            <p className="mx-auto max-w-2xl text-xl text-gray-600">
-              Professional photo management and editing application. Upload,
-              organize, and edit your photos with ease.
-            </p>
-          </div>
+    <main className="flex flex-1 flex-col items-center px-4">
+      <Toaster messages={errors} type={'error'} />
+      <UsersCount usersCount={usersCount} />
 
-          <PhotoUpload onUpload={handlePhotoUpload} />
-
-          {photos.length > 0 && (
-            <div className="mt-12">
-              <h2 className="mb-6 text-2xl font-semibold text-gray-900">
-                Your Photos ({photos.length})
-              </h2>
-
-              <PhotoFilters
-                filters={filters}
-                onFiltersChange={setFilters}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                sortBy={sortBy}
-                onSortByChange={setSortBy}
-                sortOrder={sortOrder}
-                onSortOrderChange={setSortOrder}
-              />
-
-              <PhotoGrid photos={photos} onDelete={handlePhotoDelete} />
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+      <div className="mt-9 flex flex-wrap justify-center gap-3">
+        {posts &&
+          posts.map((post) => <PublicPostItem key={post.id} post={post} />)}
+      </div>
+    </main>
   );
 }
