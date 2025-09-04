@@ -8,6 +8,7 @@ import type {
 
 import { Mutex } from 'async-mutex';
 import { getCookie, deleteCookie } from './cookies';
+import { authApi } from '@/features/auth/api/authApi';
 
 /**
  * Mutex для предотвращения одновременных refresh token запросов
@@ -116,6 +117,10 @@ export const baseQueryWithReauth: BaseQueryFn<
           // Очищаем cookies - пользователь должен войти заново
           deleteCookie('accessToken');
           deleteCookie('refreshToken');
+          
+          // Очищаем кэш RTK Query для данных пользователя
+          // Это важно для правильного отображения состояния аутентификации
+          api.dispatch(authApi.util.invalidateTags(['me']));
         }
       } finally {
         // Освобождаем блокировку
