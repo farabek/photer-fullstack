@@ -7,7 +7,7 @@ import { ytSidebarDataset } from './SidebarData';
 import SidebarItem from './SidebarItem';
 import { cn } from '@/shared/lib/cn';
 import { Button, IconSprite, Scrollbar } from '@/shared/ui';
-import { authApi } from '@/features/auth/api/authApi';
+import { authApi, useGetMeQuery } from '@/features/auth/api/authApi';
 import { LogoutButton } from '../logout-button/LogoutButton';
 import { LogoutModal } from '@/features/auth/ui/login-form/LogoutForm';
 import { useLogout } from '@/features/auth/hooks/useLogout';
@@ -16,9 +16,7 @@ import { RootState } from '@/shared/state/store';
 
 export const Sidebar = (): React.JSX.Element | null => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const data = useSelector(
-    (state: RootState) => authApi.endpoints.getMe.select()(state).data
-  );
+  const { data, isLoading, error } = useGetMeQuery();
   const { isOpen, openModal, closeModal, confirmLogout } = useLogout();
 
   // 🔒 КОНТРОЛЬ ВИДИМОСТИ SIDEBAR ДЛЯ НЕАВТОРИЗОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ
@@ -108,7 +106,15 @@ export const Sidebar = (): React.JSX.Element | null => {
 
       {/* Нижняя часть: Log Out / Sign In */}
       <div className="pb-6">
-        {data ? (
+        {isLoading ? (
+          // Показываем загрузку во время проверки аутентификации
+          <div className="flex items-center gap-3 px-4 py-2">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-light-100 border-t-transparent" />
+            {isSidebarOpen && (
+              <span className="regular-text-14 text-light-100">Loading...</span>
+            )}
+          </div>
+        ) : data ? (
           // Для авторизованных пользователей - кнопка выхода
           <>
             <LogoutButton hideText={!isSidebarOpen} openModal={openModal} />

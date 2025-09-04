@@ -30,6 +30,7 @@ export const authApi = baseApi.injectEndpoints({
         method: 'POST',
         body: body,
       }),
+      invalidatesTags: ['me'], // Инвалидируем кэш пользователя при логине
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data: response } = await queryFulfilled;
@@ -40,6 +41,7 @@ export const authApi = baseApi.injectEndpoints({
           // localStorage больше не нужен - используем cookies для SSR совместимости
 
           // Загружаем данные пользователя после успешного входа
+          // Это обновит кэш и обеспечит правильное отображение состояния аутентификации
           await dispatch(authApi.endpoints.getMe.initiate());
         } catch (error) {
           console.log(error);
@@ -79,6 +81,15 @@ export const authApi = baseApi.injectEndpoints({
     getMe: builder.query<User, void>({
       query: () => '/auth/me',
       providesTags: ['me'],
+      // Сохраняем данные пользователя в кэше на 5 минут
+      // Это предотвращает потерю состояния аутентификации при навигации
+      keepUnusedDataFor: 300,
+      // Не перезапрашиваем данные при фокусе на окне
+      refetchOnFocus: false,
+      // Не перезапрашиваем данные при переподключении
+      refetchOnReconnect: false,
+      // Не перезапрашиваем данные при монтировании компонента
+      refetchOnMountOrArgChange: false,
     }),
 
     logout: builder.mutation<void, void>({
@@ -86,6 +97,7 @@ export const authApi = baseApi.injectEndpoints({
         url: '/auth/logout',
         method: 'POST',
       }),
+      invalidatesTags: ['me'], // Инвалидируем кэш пользователя при выходе
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         await queryFulfilled;
 
