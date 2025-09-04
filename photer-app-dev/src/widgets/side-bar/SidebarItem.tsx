@@ -58,19 +58,47 @@ export default function SidebarItem({
     </HoverDiv>
   );
 
-  if (title === 'Profile' && userId) {
-    path = `/profile/${userId}`;
+  // Специальная логика для Profile
+  if (title === 'Profile') {
+    if (userId) {
+      // Если пользователь авторизован - переходим на его профиль
+      path = `/profile/${userId}`;
+    } else {
+      // Если пользователь не авторизован - перенаправляем на Sign In
+      return (
+        <button
+          className="w-full"
+          onClick={() => (window.location.href = '/sign-in')}
+        >
+          {iconAndText}
+        </button>
+      );
+    }
   }
 
+  // Специальная логика для Create - требует авторизации
   if (title === 'Create') {
-    return (
-      <button
-        className="w-full"
-        onClick={() => dispatch(openModal({ type: 'post-create' }))}
-      >
-        {iconAndText}
-      </button>
-    );
+    if (userId) {
+      // Если пользователь авторизован - открываем модал создания поста
+      return (
+        <button
+          className="w-full"
+          onClick={() => dispatch(openModal({ type: 'post-create' }))}
+        >
+          {iconAndText}
+        </button>
+      );
+    } else {
+      // Если пользователь не авторизован - перенаправляем на Sign In
+      return (
+        <button
+          className="w-full"
+          onClick={() => (window.location.href = '/sign-in')}
+        >
+          {iconAndText}
+        </button>
+      );
+    }
   }
 
   return <Link href={path ?? '#'}>{iconAndText}</Link>;

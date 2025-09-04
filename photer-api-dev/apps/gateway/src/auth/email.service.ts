@@ -23,22 +23,32 @@ export class EmailService {
    * Инициализация SMTP транспорта
    */
   private initializeTransporter() {
+    const gmailUser = this.configService.get<string>('GMAIL_USER');
+    const gmailPassword = this.configService.get<string>('GMAIL_APP_PASSWORD');
+
+    this.logger.log(`🔧 Initializing email transporter...`);
+    this.logger.log(`🔧 Gmail user: ${gmailUser}`);
+    this.logger.log(
+      `🔧 Gmail password configured: ${gmailPassword ? 'Yes' : 'No'}`,
+    );
+
     // Для разработки используем Gmail SMTP
     // В продакшене можно использовать SendGrid, AWS SES и др.
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: this.configService.get<string>('GMAIL_USER'),
-        pass: this.configService.get<string>('GMAIL_APP_PASSWORD'),
+        user: gmailUser,
+        pass: gmailPassword,
       },
     });
 
     // Проверяем подключение
     this.transporter.verify((error, success) => {
       if (error) {
-        this.logger.error('SMTP connection failed:', error);
+        this.logger.error('❌ SMTP connection failed:', error);
+        this.logger.error('❌ Error details:', error.message);
       } else {
-        this.logger.log('SMTP server is ready to send emails');
+        this.logger.log('✅ SMTP server is ready to send emails');
       }
     });
   }
@@ -52,6 +62,12 @@ export class EmailService {
     confirmationCode: string,
   ): Promise<boolean> {
     try {
+      this.logger.log(`📧 Attempting to send email to: ${email}`);
+      this.logger.log(
+        `📧 From address: ${this.configService.get<string>('GMAIL_USER')}`,
+      );
+      this.logger.log(`🔑 Confirmation code being sent: ${confirmationCode}`);
+
       const mailOptions = {
         from: this.configService.get<string>('GMAIL_USER'),
         to: email,
@@ -59,16 +75,23 @@ export class EmailService {
         html: this.createRegistrationEmailTemplate(username, confirmationCode),
       };
 
+      this.logger.log(`📧 Sending email with options:`, {
+        from: mailOptions.from,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+      });
+
       const result = await this.transporter.sendMail(mailOptions);
       this.logger.log(
-        `Registration confirmation email sent to ${email}: ${result.messageId}`,
+        `✅ Registration confirmation email sent to ${email}: ${result.messageId}`,
       );
       return true;
     } catch (error) {
       this.logger.error(
-        `Failed to send registration confirmation email to ${email}:`,
+        `❌ Failed to send registration confirmation email to ${email}:`,
         error,
       );
+      this.logger.error(`❌ Error details:`, error.message);
       return false;
     }
   }

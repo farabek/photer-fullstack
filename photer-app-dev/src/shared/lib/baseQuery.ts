@@ -116,6 +116,14 @@ export const baseQueryWithReauth: BaseQueryFn<
           // Очищаем cookies - пользователь должен войти заново
           deleteCookie('accessToken');
           deleteCookie('refreshToken');
+
+          // Очищаем кэш RTK Query для данных пользователя
+          // Это важно для правильного отображения состояния аутентификации
+          // Используем универсальный подход для инвалидации тега 'me'
+          api.dispatch({
+            type: 'baseApi/invalidateTags',
+            payload: ['me'],
+          });
         }
       } finally {
         // Освобождаем блокировку

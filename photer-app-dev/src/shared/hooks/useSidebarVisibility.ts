@@ -15,13 +15,16 @@ export const useSidebarVisibility = () => {
   }, []);
 
   // Маршруты, где должен показываться Sidebar
-  // Включаем только существующие страницы в проекте
-  // TODO: Когда будут созданы новые страницы, добавить их сюда:
-  // - '/create-post' - страница создания поста
-  // - '/messenger' - страница мессенджера
-  // - '/statistics' - страница статистики
-  // - '/favorites' - страница избранного
-  const sidebarRoutes = ['/', '/profile', '/search'];
+  // Включаем все основные страницы приложения
+  const sidebarRoutes = [
+    '/',
+    '/profile',
+    '/search',
+    '/create-post',
+    '/messenger',
+    '/statistics',
+    '/favorites',
+  ];
 
   // Проверяем, должен ли показываться Sidebar на текущем маршруте
   const showSidebar = sidebarRoutes.some(

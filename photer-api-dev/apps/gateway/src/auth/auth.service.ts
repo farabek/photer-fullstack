@@ -142,6 +142,14 @@ export class AuthService {
     // Код действителен 24 часа
     const confirmationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+    // 🔍 ОТЛАДОЧНЫЕ ЛОГИ
+    this.logger.log(
+      `🔑 Generated confirmation code for ${email}: ${confirmationCode}`,
+    );
+    this.logger.log(
+      `⏰ Confirmation expires at: ${confirmationExpires.toISOString()}`,
+    );
+
     // Создаем пользователя с кодом подтверждения
     // Пароль будет хеширован в UsersService.create()
     await this.usersService.create({
@@ -194,12 +202,22 @@ export class AuthService {
    */
   async registrationConfirmation(code: string) {
     this.logger.log(`🔍 registrationConfirmation called with code: ${code}`);
+    this.logger.log(`🔍 Code length: ${code.length}`);
+    this.logger.log(`🔍 Code type: ${typeof code}`);
+    this.logger.log(`🔍 Code trimmed: "${code.trim()}"`);
 
     // Ищем пользователя по коду подтверждения
     const user = await this.usersService.findByConfirmationCode(code);
     this.logger.log(
       `👤 User found by confirmation code: ${user ? 'Yes' : 'No'}`,
     );
+
+    if (user) {
+      this.logger.log(
+        `👤 User confirmation code in DB: ${user.confirmationCode}`,
+      );
+      this.logger.log(`🔍 Codes match: ${user.confirmationCode === code}`);
+    }
 
     if (!user) {
       this.logger.warn(`❌ No user found for confirmation code: ${code}`);
