@@ -94,16 +94,18 @@ export class AuthService {
   async login(user: any) {
     const payload = { email: user.email, sub: user.id };
 
-    // Генерируем access token используя переменную окружения
+    // Генерируем access token (секрет: JWT_SECRET)
     const accessToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET,
       expiresIn: this.parseTtlToSeconds(
         process.env.JWT_ACCESS_EXPIRATION_TIME,
         '5m',
       ),
     });
 
-    // Генерируем refresh token используя переменную окружения
+    // Генерируем refresh token (секрет: JWT_REFRESH_SECRET || JWT_SECRET)
     const refreshToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
       expiresIn: this.parseTtlToSeconds(
         process.env.JWT_REFRESH_EXPIRATION_TIME,
         '7d',
