@@ -28,9 +28,9 @@ const mutex = new Mutex();
  * 3. Короткий срок жизни (60 сек) + автоматическое обновление обеспечивают безопасность
  */
 const getBaseUrl = () => {
-  // Проверяем, находимся ли мы в режиме разработки
+  // В dev используем прокси /api/* на next.config.ts (один origin: 3000)
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3001/api/v1';
+    return '/api/v1';
   }
 
   // Для продакшена используем переменную окружения
