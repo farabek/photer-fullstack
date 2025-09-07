@@ -1,4 +1,12 @@
-export const decodeJwt = (token: string): { userId?: string; sub?: string } => {
+export const decodeJwt = (
+  token: string
+): {
+  userId?: string;
+  sub?: string;
+  exp?: number;
+  iat?: number;
+  [k: string]: any;
+} => {
   try {
     const payloadBase64 = token.split('.')[1];
     const payloadJson = atob(

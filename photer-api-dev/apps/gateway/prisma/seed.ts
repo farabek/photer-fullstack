@@ -26,7 +26,7 @@ async function main() {
       id: 'sunset-photo',
       title: 'Beautiful Sunset',
       description: 'A stunning sunset over the mountains',
-      url: 'https://example.com/sunset.jpg',
+      url: 'https://images.unsplash.com/photo-1501973801540-537f08ccae7b?w=1200',
       tags: 'nature,sunset,mountains',
       userId: user.id,
     },
@@ -39,7 +39,7 @@ async function main() {
       id: 'city-photo',
       title: 'City Lights',
       description: 'Urban night photography',
-      url: 'https://example.com/city.jpg',
+      url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200',
       tags: 'urban,night,city',
       userId: user.id,
     },
@@ -76,7 +76,7 @@ async function main() {
       id: 'portrait-photo',
       title: 'Portrait Photography',
       description: 'Professional portrait session',
-      url: 'https://example.com/portrait.jpg',
+      url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?w=1200',
       tags: 'portrait,professional,photography',
       userId: user2.id,
     },
@@ -89,11 +89,87 @@ async function main() {
       id: 'landscape-photo',
       title: 'Mountain Landscape',
       description: 'Breathtaking mountain views',
-      url: 'https://example.com/landscape.jpg',
+      url: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200',
       tags: 'landscape,mountains,nature',
       userId: user3.id,
     },
   });
+
+  // Добавим ещё 8 постов (итого 12)
+  const extra = [
+    {
+      id: 'forest-photo',
+      title: 'Deep Forest',
+      description: 'Misty morning in the forest',
+      url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200',
+      tags: 'nature,forest,morning',
+      userId: user.id,
+    },
+    {
+      id: 'sea-photo',
+      title: 'Sea Waves',
+      description: 'Blue waves on the shore',
+      url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200',
+      tags: 'sea,water,waves',
+      userId: user2.id,
+    },
+    {
+      id: 'desert-photo',
+      title: 'Desert Dunes',
+      description: 'Golden sand dunes at sunset',
+      url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200',
+      tags: 'desert,sand,sunset',
+      userId: user3.id,
+    },
+    {
+      id: 'bridge-photo',
+      title: 'City Bridge',
+      description: 'Bridge over the river at night',
+      url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200',
+      tags: 'city,bridge,night',
+      userId: user.id,
+    },
+    {
+      id: 'mountain-lake-photo',
+      title: 'Mountain Lake',
+      description: 'Crystal clear lake in the mountains',
+      url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200',
+      tags: 'mountains,lake,clear',
+      userId: user2.id,
+    },
+    {
+      id: 'field-flowers-photo',
+      title: 'Field of Flowers',
+      description: 'Colorful flowers in the field',
+      url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200',
+      tags: 'field,flowers,colorful',
+      userId: user3.id,
+    },
+    {
+      id: 'night-sky-photo',
+      title: 'Night Sky',
+      description: 'Milky Way over the mountains',
+      url: 'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=1200',
+      tags: 'night,sky,milkyway',
+      userId: user.id,
+    },
+    {
+      id: 'forest-path-photo',
+      title: 'Forest Path',
+      description: 'Small path through the forest',
+      url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200',
+      tags: 'forest,path,trees',
+      userId: user2.id,
+    },
+  ];
+
+  for (const p of extra) {
+    await prisma.photo.upsert({
+      where: { id: p.id },
+      update: {},
+      create: p,
+    });
+  }
 
   console.log('Seed completed successfully');
   console.log('Created users:', user.username, user2.username, user3.username);

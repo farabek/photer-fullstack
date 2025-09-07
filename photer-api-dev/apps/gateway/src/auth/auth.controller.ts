@@ -40,6 +40,35 @@ import { ApiErrorResult } from './dto/api-error-result.dto';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  // Преобразует TTL вида '120000', '60s', '2m', '1h', '7d' в миллисекунды
+  private parseTtlToMs(
+    value: string | undefined,
+    defaultValue: string,
+  ): number {
+    const src = (value || defaultValue).toString().trim();
+    const match = src.match(/^(\d+)(ms|s|m|h|d)?$/i);
+    if (!match) {
+      const asNum = Number(src);
+      return Number.isFinite(asNum) ? asNum : 0;
+    }
+    const amount = Number(match[1]);
+    const unit = (match[2] || 's').toLowerCase();
+    switch (unit) {
+      case 'ms':
+        return amount;
+      case 's':
+        return amount * 1000;
+      case 'm':
+        return amount * 60 * 1000;
+      case 'h':
+        return amount * 60 * 60 * 1000;
+      case 'd':
+        return amount * 24 * 60 * 60 * 1000;
+      default:
+        return amount * 1000;
+    }
+  }
+
   /**
    * Регистрация нового пользователя
    *
@@ -182,13 +211,23 @@ export class AuthController {
 
     const result = await this.authService.login(user);
 
+    // Берем TTL из env (поддержка форматов 120000 | 60s | 2m | 1h | 7d)
+    const accessMaxAgeMs = this.parseTtlToMs(
+      process.env.JWT_ACCESS_EXPIRATION_TIME,
+      '5m',
+    );
+    const refreshMaxAgeMs = this.parseTtlToMs(
+      process.env.JWT_REFRESH_EXPIRATION_TIME,
+      '7d',
+    );
+
     // Устанавливаем accessToken в обычный cookie (не httpOnly)
     // JavaScript может читать этот токен для добавления в Authorization header
     res.cookie('accessToken', result.accessToken, {
       httpOnly: false, // false чтобы JavaScript мог читать
       secure: process.env.NODE_ENV === 'production', // только HTTPS в продакшене
       sameSite: 'strict', // защита от CSRF атак
-      maxAge: 5 * 60 * 1000, // 5 минут согласно переменной окружения
+      maxAge: accessMaxAgeMs,
       path: '/',
     });
 
@@ -198,7 +237,7 @@ export class AuthController {
       httpOnly: true, // true для защиты от XSS
       secure: process.env.NODE_ENV === 'production', // только HTTPS в продакшене
       sameSite: 'strict', // защита от CSRF атак
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней согласно переменной окружения
+      maxAge: refreshMaxAgeMs,
       path: '/',
     });
 
@@ -441,12 +480,22 @@ export class AuthController {
 
     const result = await this.authService.refreshTokens(refreshToken);
 
+    // Берем TTL из env (поддержка форматов 120000 | 60s | 2m | 1h | 7d)
+    const accessMaxAgeMs = this.parseTtlToMs(
+      process.env.JWT_ACCESS_EXPIRATION_TIME,
+      '5m',
+    );
+    const refreshMaxAgeMs = this.parseTtlToMs(
+      process.env.JWT_REFRESH_EXPIRATION_TIME,
+      '7d',
+    );
+
     // Устанавливаем новый accessToken в обычный cookie
     res.cookie('accessToken', result.accessToken, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 5 * 60 * 1000, // 5 минут согласно переменной окружения
+      maxAge: accessMaxAgeMs,
       path: '/',
     });
 
@@ -455,7 +504,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней согласно переменной окружения
+      maxAge: refreshMaxAgeMs,
       path: '/',
     });
 

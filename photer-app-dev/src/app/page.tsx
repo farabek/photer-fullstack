@@ -10,7 +10,9 @@ async function getUsersCount(): Promise<number> {
   if (!res.ok) {
     throw new Error('Failed to fetch users count.');
   }
-  return res.json();
+  const data = await res.json();
+  // API returns { count: number }
+  return typeof data === 'number' ? data : Number(data?.count ?? 0);
 }
 
 async function getPosts(): Promise<Posts> {

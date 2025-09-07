@@ -6,7 +6,7 @@ type Props = {
   hideText?: boolean;
 };
 
-export function LogoutButton({
+const LogoutButton = React.memo(function LogoutButton({
   openModal,
   hideText = false,
 }: Props): ReactElement {
@@ -22,4 +22,8 @@ export function LogoutButton({
       </div>
     </Button>
   );
-}
+});
+
+LogoutButton.displayName = 'LogoutButton';
+
+export { LogoutButton };

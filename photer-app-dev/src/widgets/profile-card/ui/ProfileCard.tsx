@@ -12,6 +12,7 @@ import { profileApi } from '@/features/edit-profile/api/profileApi';
 import { RootState, useAppDispatch } from '@/shared/state/store';
 import { useSelector } from 'react-redux';
 import { ProfileGenIfo } from '@/features/edit-profile/lib/profile.types';
+import { appLogger } from '@/shared/lib/appLogger';
 
 type Props = {
   isOwner: boolean;
@@ -36,6 +37,31 @@ export const ProfileCard = ({
       profileApi.endpoints.getCurrentUser.select()(state).data
   );
 
+  // Логируем инициализацию ProfileCard
+  useEffect(() => {
+    appLogger.profileSettings('PROFILE_CARD_INITIALIZED', {
+      isOwner,
+      isAuthorized,
+      profileId,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      isEditProfile,
+      timestamp: new Date().toISOString(),
+    });
+  }, []);
+
+  // Логируем изменения состояния редактирования профиля
+  useEffect(() => {
+    appLogger.profileSettings('PROFILE_CARD_EDIT_STATE_CHANGED', {
+      isEditProfile,
+      isOwner,
+      isAuthorized,
+      profileId,
+      hasUser: !!user,
+      timestamp: new Date().toISOString(),
+    });
+  }, [isEditProfile, isOwner, isAuthorized, profileId, user]);
+
   useEffect(() => {
     if ((!user && profile) || (profile && user?.id !== profile.id)) {
       const thunk = profileApi.util.upsertQueryData(
@@ -47,8 +73,37 @@ export const ProfileCard = ({
     }
   }, [dispatch, user, profile]);
 
+  const handleOpenEditProfile = () => {
+    appLogger.profileSettings('PROFILE_SETTINGS_MODAL_OPENING', {
+      isOwner,
+      isAuthorized,
+      profileId,
+      hasUser: !!user,
+      timestamp: new Date().toISOString(),
+    });
+    setIsEditProfile(true);
+  };
+
+  const handleCloseEditProfile = () => {
+    appLogger.profileSettings('PROFILE_SETTINGS_MODAL_CLOSING', {
+      isOwner,
+      isAuthorized,
+      profileId,
+      hasUser: !!user,
+      timestamp: new Date().toISOString(),
+    });
+    setIsEditProfile(false);
+  };
+
   if (isEditProfile) {
-    return <EditProfile onClose={() => setIsEditProfile(false)} />;
+    appLogger.profileSettings('PROFILE_SETTINGS_MODAL_RENDERED', {
+      isOwner,
+      isAuthorized,
+      profileId,
+      hasUser: !!user,
+      timestamp: new Date().toISOString(),
+    });
+    return <EditProfile onClose={handleCloseEditProfile} />;
   }
 
   const displayName = user
@@ -73,7 +128,7 @@ export const ProfileCard = ({
             <h2 className={'h1-text'}>{displayName}</h2>
             {isAuthorized && (
               <ProfileButtons
-                callback={() => setIsEditProfile(true)}
+                callback={handleOpenEditProfile}
                 isOwner={isOwner}
               />
             )}

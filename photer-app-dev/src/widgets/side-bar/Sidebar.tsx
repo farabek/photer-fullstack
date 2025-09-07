@@ -1,30 +1,155 @@
 // src/widgets/side-bar/Sidebar.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import HoverDiv from './HoverDiv';
 import { ytSidebarDataset } from './SidebarData';
 import SidebarItem from './SidebarItem';
 import { cn } from '@/shared/lib/cn';
 import { Button, IconSprite, Scrollbar } from '@/shared/ui';
-import { authApi, useGetMeQuery } from '@/features/auth/api/authApi';
+import { authApi } from '@/features/auth/api/authApi';
 import { LogoutButton } from '../logout-button/LogoutButton';
 import { LogoutModal } from '@/features/auth/ui/login-form/LogoutForm';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/shared/state/store';
 import { getCookie } from '@/shared/lib/cookies';
+import { appLogger } from '@/shared/lib/appLogger';
+import { createSelector } from '@reduxjs/toolkit';
+
+// Memoized selector to avoid returning a new object reference each time
+const getMeSelector = authApi.endpoints.getMe.select();
+const selectAuthData = createSelector([getMeSelector], (queryState) => ({
+  data: queryState.data,
+  isLoading: queryState.isLoading,
+  error: queryState.error,
+}));
 
 export const Sidebar = (): React.JSX.Element | null => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  // Проверяем наличие токена перед запросом
+  // Получаем данные из RTK Query кэша вместо дублирующего запроса
   const hasToken = getCookie('accessToken');
-  const { data, isLoading, error } = useGetMeQuery(undefined, {
-    skip: !hasToken, // Пропускаем запрос, если нет токена
-  });
+
+  // Используем мемоизированный селектор для предотвращения лишних рендеров
+  const authData = useSelector(selectAuthData);
+
+  // Деструктурируем мемоизированные данные
+  const { data, isLoading, error } = authData;
+
+  // 🔍 DIAGNOSTIC LOG: Track component re-renders (только в development)
+  const renderCounter = useRef(0);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔄 SIDEBAR RENDER:', {
+      hasToken: !!hasToken,
+      tokenValue: hasToken ? 'present' : 'null',
+      isLoading,
+      hasError: !!error,
+      hasData: !!data,
+      renderCount: renderCounter.current++,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Определяем, авторизован ли пользователь
+  // Используем только наличие токена для определения аутентификации
+  // Данные пользователя получаем из кэша RTK Query (загружаются в AuthInitializer)
+  const isAuthenticated = !!hasToken;
+
+  // Логируем монтирование Sidebar
+  useEffect(() => {
+    console.log('🔍 SIDEBAR useEffect [] - MOUNT:', {
+      hasToken: !!hasToken,
+      tokenValue: hasToken ? 'exists' : 'null',
+      hasData: !!data,
+      isLoading,
+      hasError: !!error,
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+    appLogger.sidebar('SIDEBAR_MOUNTED', {
+      hasToken: !!hasToken,
+      tokenValue: hasToken ? 'exists' : 'null',
+      hasData: !!data,
+      isLoading,
+      hasError: !!error,
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+  }, []);
+
+  // Логируем изменения состояния аутентификации
+  useEffect(() => {
+    console.log('🔍 SIDEBAR useEffect [auth deps] - AUTH STATE CHANGE:', {
+      hasToken: !!hasToken,
+      tokenValue: hasToken ? 'exists' : 'null',
+      hasData: !!data,
+      dataUserId: data?.userId,
+      dataEmail: data?.email,
+      isLoading,
+      hasError: !!error,
+      errorMessage: error ? 'Error exists' : 'No error',
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+    appLogger.sidebar('SIDEBAR_AUTH_STATE_CHANGED', {
+      hasToken: !!hasToken,
+      tokenValue: hasToken ? 'exists' : 'null',
+      hasData: !!data,
+      dataUserId: data?.userId,
+      dataEmail: data?.email,
+      isLoading,
+      hasError: !!error,
+      errorMessage: error ? 'Error exists' : 'No error',
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+  }, [hasToken, data, isLoading, error, isAuthenticated]);
+
+  // Отладочная информация для диагностики проблемы (только в development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Sidebar Debug:', {
+      hasToken: !!hasToken,
+      tokenValue: hasToken ? 'exists' : 'null',
+      data: !!data,
+      isLoading,
+      error: !!error,
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+  }
 
   const { isOpen, openModal, closeModal, confirmLogout } = useLogout();
+
+  const handleLogoutModalOpen = () => {
+    appLogger.sidebar('SIDEBAR_LOGOUT_MODAL_OPENING', {
+      hasToken: !!hasToken,
+      hasData: !!data,
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+    openModal();
+  };
+
+  const handleLogoutModalClose = () => {
+    appLogger.sidebar('SIDEBAR_LOGOUT_MODAL_CLOSING', {
+      hasToken: !!hasToken,
+      hasData: !!data,
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+    closeModal();
+  };
+
+  const handleSignInClick = () => {
+    appLogger.sidebar('SIDEBAR_SIGN_IN_CLICKED', {
+      hasToken: !!hasToken,
+      hasData: !!data,
+      isAuthenticated,
+      timestamp: new Date().toISOString(),
+    });
+    window.location.href = '/sign-in';
+  };
 
   // 🔒 КОНТРОЛЬ ВИДИМОСТИ SIDEBAR ДЛЯ НЕАВТОРИЗОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ
   //
@@ -113,39 +238,45 @@ export const Sidebar = (): React.JSX.Element | null => {
 
       {/* Нижняя часть: Log Out / Sign In */}
       <div className="pb-6">
-        {isLoading && hasToken ? (
-          // Показываем загрузку только если есть токен и идет загрузка
+        {isLoading && isAuthenticated ? (
+          // Показываем загрузку только если пользователь авторизован и идет загрузка
           <div className="flex items-center gap-3 px-4 py-2">
             <div className="border-light-100 h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
             {isSidebarOpen && (
               <span className="regular-text-14 text-light-100">Loading...</span>
             )}
           </div>
-        ) : data && hasToken ? (
+        ) : isAuthenticated ? (
           // Для авторизованных пользователей - кнопка выхода
+          // Используем только isAuthenticated, не зависим от data
           <>
-            <LogoutButton hideText={!isSidebarOpen} openModal={openModal} />
+            <LogoutButton
+              hideText={!isSidebarOpen}
+              openModal={handleLogoutModalOpen}
+            />
             <LogoutModal
               open={isOpen}
-              userEmail={''}
+              userEmail={data?.email || ''}
               onConfirmed={confirmLogout}
-              onCanceled={closeModal}
+              onCanceled={handleLogoutModalClose}
             />
           </>
         ) : (
           // Для неавторизованных пользователей - кнопка входа
-          <Button
-            variant="text"
-            className="text-light-100 hover:text-light-100 active:text-light-100 focus:text-light-100 w-full cursor-pointer border-none"
-            onClick={() => (window.location.href = '/sign-in')}
-          >
-            <div className="flex items-center gap-3">
-              <IconSprite iconName="person-outline" />
-              {isSidebarOpen && (
-                <span className="regular-text-14">Sign In</span>
-              )}
-            </div>
-          </Button>
+          <>
+            <Button
+              variant="text"
+              className="text-light-100 hover:text-light-100 active:text-light-100 focus:text-light-100 w-full cursor-pointer border-none"
+              onClick={handleSignInClick}
+            >
+              <div className="flex items-center gap-3">
+                <IconSprite iconName="person-outline" />
+                {isSidebarOpen && (
+                  <span className="regular-text-14">Sign In</span>
+                )}
+              </div>
+            </Button>
+          </>
         )}
       </div>
     </aside>

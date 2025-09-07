@@ -87,14 +87,28 @@ export const baseQueryWithReauth: BaseQueryFn<
   // Ждем, если другой запрос обновляет токены
   await mutex.waitForUnlock();
 
+  console.log('🔄 [BASE_QUERY] Starting request:', {
+    url: typeof args === 'string' ? args : args.url,
+    method: typeof args === 'string' ? 'GET' : args.method || 'GET',
+    hasAccessToken: !!getCookie('accessToken'),
+    hasRefreshToken: !!getCookie('refreshToken'),
+    timestamp: new Date().toISOString(),
+  });
+
   let result = await baseQuery(args, api, extraOptions);
 
   // Если получили 401 (токен истек или недействителен)
   if (result.error && result.error.status === 401) {
+    console.log('🔐 401 Error detected, attempting token refresh:', {
+      url: typeof args === 'string' ? args : args.url,
+      timestamp: new Date().toISOString(),
+      error: result.error,
+    });
     if (!mutex.isLocked()) {
       // Блокируем другие запросы от обновления токенов одновременно
       const release = await mutex.acquire();
       try {
+        console.log('🔄 [REFRESH] Starting token refresh process');
         // Пытаемся обновить токены
         // refreshToken автоматически отправляется в httpOnly cookie
         const refreshResult = await baseQuery(
@@ -106,35 +120,86 @@ export const baseQueryWithReauth: BaseQueryFn<
           extraOptions
         );
 
+        console.log('🔄 [REFRESH] Refresh result:', {
+          hasData: !!refreshResult.data,
+          hasError: !!refreshResult.error,
+          errorStatus: refreshResult.error?.status,
+          timestamp: new Date().toISOString(),
+        });
+
         if (refreshResult.data) {
+          console.log('✅ Token refresh successful, retrying original request');
           // Успешно обновили токены
           // Новый accessToken автоматически сохранился в обычный cookie от backend
           // Повторяем оригинальный запрос с новым токеном
           result = await baseQuery(args, api, extraOptions);
+          console.log('✅ [REFRESH] Original request after refresh:', {
+            success: !result.error,
+            error: result.error,
+            timestamp: new Date().toISOString(),
+          });
         } else {
+          console.log('❌ Token refresh failed (no data), clearing cookies:', {
+            refreshError: refreshResult.error,
+            hasAccessTokenBefore: !!getCookie('accessToken'),
+            hasRefreshTokenBefore: !!getCookie('refreshToken'),
+            timestamp: new Date().toISOString(),
+          });
           // Не удалось обновить токены (refreshToken истек или недействителен)
-          // Очищаем cookies - пользователь должен войти заново
           deleteCookie('accessToken');
           deleteCookie('refreshToken');
-
-          // Очищаем кэш RTK Query для данных пользователя
-          // Это важно для правильного отображения состояния аутентификации
-          // Используем универсальный подход для инвалидации тега 'me'
+          console.log('🧹 Cookies cleared, dispatching invalidateTags');
           api.dispatch({
             type: 'baseApi/invalidateTags',
             payload: ['me'],
           });
+          // 🆕 [UPDATE 1]: уведомление + редирект (только если не идет refresh)
+          if (typeof window !== 'undefined' && !mutex.isLocked()) {
+            alert('Сессия истекла, войдите снова');
+            window.location.href = '/sign-in';
+          }
+        }
+
+        // 🆕 [UPDATE 2]: проверка на refresh 401 → выходим из цикла
+        if (refreshResult.error && refreshResult.error.status === 401) {
+          console.log('⛔ Refresh token expired → force logout');
+          deleteCookie('accessToken');
+          deleteCookie('refreshToken');
+          api.dispatch({ type: 'baseApi/invalidateTags', payload: ['me'] });
+
+          // 🆕 [UPDATE 3]: уведомление + редирект
+          if (typeof window !== 'undefined') {
+            alert('Сессия истекла, войдите снова');
+            window.location.href = '/sign-in';
+          }
+
+          return { error: refreshResult.error };
         }
       } finally {
         // Освобождаем блокировку
         release();
+        console.log('🔄 [REFRESH] Mutex released');
       }
     } else {
       // Другой запрос уже обновляет токены, ждем
+      console.log('🔄 [REFRESH] Another request is refreshing, waiting...');
       await mutex.waitForUnlock();
+      console.log('🔄 [REFRESH] Mutex unlocked, retrying original request');
       result = await baseQuery(args, api, extraOptions);
+      console.log('✅ [REFRESH] Original request after waiting:', {
+        success: !result.error,
+        error: result.error,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
+
+  console.log('🔄 [BASE_QUERY] Final result:', {
+    url: typeof args === 'string' ? args : args.url,
+    success: !result.error,
+    error: result.error,
+    timestamp: new Date().toISOString(),
+  });
 
   return result;
 };

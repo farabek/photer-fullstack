@@ -31,6 +31,28 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
+  // Преобразует TTL вида '120000', '60s', '2m', '1h', '7d' в секунды для jwt "expiresIn"
+  private parseTtlToSeconds(
+    value: string | undefined,
+    defaultValue: string,
+  ): number | string {
+    const src = (value || defaultValue).toString().trim();
+    // Если указаны единицы, передаём строку как есть — jsonwebtoken понимает
+    if (/^\d+(ms|s|m|h|d)$/i.test(src)) return src.toLowerCase();
+    // Иначе интерпретируем как миллисекунды/секунды и приводим к сек.
+    const match = src.match(/^(\d+)$/);
+    if (match) {
+      const num = Number(match[1]);
+      // Если похоже на миллисекунды (больше часа в секундах), переведём в сек
+      if (num > 24 * 60 * 60) {
+        return Math.floor(num / 1000);
+      }
+      return num; // считаем секундами
+    }
+    // Фолбэк: 5 минут
+    return '5m';
+  }
+
   async validateUser(email: string, password: string): Promise<any> {
     this.logger.log(`🔍 validateUser called for email: ${email}`);
 
@@ -74,12 +96,18 @@ export class AuthService {
 
     // Генерируем access token используя переменную окружения
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: process.env.JWT_ACCESS_EXPIRATION_TIME || '15m',
+      expiresIn: this.parseTtlToSeconds(
+        process.env.JWT_ACCESS_EXPIRATION_TIME,
+        '5m',
+      ),
     });
 
     // Генерируем refresh token используя переменную окружения
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRATION_TIME || '7d',
+      expiresIn: this.parseTtlToSeconds(
+        process.env.JWT_REFRESH_EXPIRATION_TIME,
+        '7d',
+      ),
     });
 
     return {

@@ -28,8 +28,17 @@ export const CountrySelect = ({
   const [getCca2Code, { data: cca2Code }] = useLazyGetCCA2CodeQuery();
 
   useEffect(() => {
+    console.log('🔍 COUNTRY SELECT useEffect - VALUE CHANGE:', {
+      value,
+      isEmpty: !value || value.trim() === '',
+      timestamp: new Date().toISOString(),
+    });
     setCurrentCountry(value);
-    getCca2Code(value);
+    if (value && value.trim() !== '') {
+      getCca2Code(value);
+    } else {
+      console.log('🔍 COUNTRY SELECT - SKIPPING EMPTY VALUE QUERY');
+    }
   }, [value, getCca2Code]);
 
   useEffect(() => {

@@ -21,7 +21,7 @@ type SidebarItemProps = {
   isSidebarOpen: boolean;
 };
 
-export default function SidebarItem({
+const SidebarItem = React.memo(function SidebarItem({
   title,
   defaultIconName,
   activeIconName,
@@ -37,10 +37,12 @@ export default function SidebarItem({
   const iconAndText = (
     <HoverDiv
       isActive={pathname === path}
-      className={cn('flex w-full items-center gap-5 px-[20px]', {
-        'min-w-[40px] flex-col items-start gap-1 rounded-full px-[12px]':
-          !isSidebarOpen,
-      })}
+      className={cn(
+        'flex w-full px-[20px]',
+        isSidebarOpen
+          ? 'items-center gap-5'
+          : 'min-w-[40px] flex-col items-start gap-1 rounded-full px-[12px]'
+      )}
     >
       <IconSprite
         iconName={isSidebarOpen ? defaultIconName : activeIconName}
@@ -102,4 +104,8 @@ export default function SidebarItem({
   }
 
   return <Link href={path ?? '#'}>{iconAndText}</Link>;
-}
+});
+
+SidebarItem.displayName = 'SidebarItem';
+
+export default SidebarItem;
