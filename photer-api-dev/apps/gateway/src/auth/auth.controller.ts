@@ -236,7 +236,7 @@ export class AuthController {
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true, // true для защиты от XSS
       secure: process.env.NODE_ENV === 'production', // только HTTPS в продакшене
-      sameSite: 'strict', // защита от CSRF атак
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: refreshMaxAgeMs,
       path: '/',
     });
@@ -503,7 +503,7 @@ export class AuthController {
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: refreshMaxAgeMs,
       path: '/',
     });

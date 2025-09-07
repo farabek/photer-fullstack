@@ -8,6 +8,7 @@ import { Alert } from '@/shared/ui';
 import StoreWrapper from '@/shared/providers/StoreWrapper';
 import { ModalProvider } from '@/shared/providers/ModalProviders';
 import { ConditionalSidebarWrapper } from './ConditionalSidebarWrapper';
+import { AuthInitializer } from '@/shared/providers/AuthInitializer';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -30,6 +31,7 @@ export default function RootLayout({
         className={`${inter.variable} bg-dark-900 regular-text-16 text-light-100 h-screen`}
       >
         <StoreWrapper>
+          <AuthInitializer />
           <div className="flex min-h-screen w-full flex-col">
             <Header withLoginBtn={true} />
             <div className="mx-auto flex w-full max-w-[1280px]">

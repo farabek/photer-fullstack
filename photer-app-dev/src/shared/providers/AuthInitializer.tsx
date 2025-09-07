@@ -80,13 +80,11 @@ export function AuthInitializer() {
     refreshTimerRef.current = setTimeout(async () => {
       try {
         // Тихий refresh — бэкенд выставит Set-Cookie для новой пары токенов
-        await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/api/v1/auth/refresh-token`,
-          {
-            method: 'POST',
-            credentials: 'include',
-          }
-        );
+        const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001/api/v1';
+        await fetch(`${base}/auth/refresh-token`, {
+          method: 'POST',
+          credentials: 'include',
+        });
         appLogger.auth('PROACTIVE_REFRESH_DONE', {
           scheduledAt: new Date(now + delay).toISOString(),
           executedAt: new Date().toISOString(),
@@ -106,6 +104,31 @@ export function AuthInitializer() {
       }
     };
   }, [hasToken]);
+
+  // Дополнительно: при возврате фокуса/видимости, если до истечения < 20с — обновляем заранее
+  useEffect(() => {
+    function maybeRefresh() {
+      const token = getCookie('accessToken');
+      if (!token) return;
+      const payload = decodeJwt(token);
+      const now = Date.now();
+      const expMs = (payload?.exp ? payload.exp * 1000 : now) - now;
+      if (expMs <= 20_000) {
+        const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001/api/v1';
+        fetch(`${base}/auth/refresh-token`, {
+          method: 'POST',
+          credentials: 'include',
+        }).catch(() => void 0);
+      }
+    }
+    window.addEventListener('focus', maybeRefresh);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') maybeRefresh();
+    });
+    return () => {
+      window.removeEventListener('focus', maybeRefresh);
+    };
+  }, []);
 
   return null; // Этот компонент не рендерит ничего видимого
 }
