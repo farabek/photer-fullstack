@@ -473,6 +473,12 @@ export class AuthController {
     description: 'Unauthorized',
   })
   async refreshToken(@Req() req, @Res({ passthrough: true }) res: any) {
+    // Диагностика: логируем приходящие куки и заголовки
+    if (process.env.NODE_ENV !== 'production') {
+      // Выводим только необходимые поля
+      console.log('🔍 [REFRESH] incoming cookies:', Object.keys(req.cookies || {}));
+      console.log('🔍 [REFRESH] Origin:', req.headers?.origin, 'Host:', req.headers?.host);
+    }
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
