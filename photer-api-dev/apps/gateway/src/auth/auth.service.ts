@@ -637,7 +637,7 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
 
-      // Генерируем новые токены
+      // Генерируем новые токены (скользящая сессия)
       return this.login(user);
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
