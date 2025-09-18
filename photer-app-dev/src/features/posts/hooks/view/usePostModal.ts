@@ -1,3 +1,5 @@
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { authApi } from '@/features/auth/api/authApi';
 import { useDeletePostMutation } from '@/features/posts/api/postsApi';
 import { errorHandler } from '@/features/posts/lib/errorHandler';
@@ -14,14 +16,20 @@ type Props = {
 type usePostModalReturn = {
   userId: string | undefined;
   isOwner: boolean;
-  handleDelete: () => Promise<void>;
+  isDeleteModalOpen: boolean;
+  setIsDeleteModalOpen: (value: boolean) => void;
+  handleDeleteConfirm: () => void;
+  handleDeleteCancel: () => void;
 };
 
 export const usePostModal = ({
   post,
   onCloseAction,
+  profileId,
 }: Props): usePostModalReturn => {
+  const router = useRouter();
   const [deletePost] = useDeletePostMutation();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const userId = useSelector(
     (state: RootState) => authApi.endpoints.getMe.select()(state).data?.userId
@@ -32,17 +40,37 @@ export const usePostModal = ({
   // чтобы избежать ложноположительных срабатываний из-за кэширования данных.
   const isOwner = userId ? post?.owner.userId === userId : false;
 
+  const handleDeleteConfirm = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false);
+  };
+
   const handleDelete = async (): Promise<void> => {
     try {
-      deletePost(post.id).unwrap();
-      onCloseAction();
+      await deletePost(post.id).unwrap();
+      setIsDeleteModalOpen(false);
+      // После успешного удаления редиректим на домашнюю страницу /profile/[id]
+      if (profileId) {
+        router.push(`/profile/${profileId}`);
+      } else {
+        router.push('/');
+      }
     } catch (e) {
       errorHandler(e);
+      setIsDeleteModalOpen(false);
     }
   };
+
   return {
     userId,
     isOwner,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    handleDeleteConfirm,
+    handleDeleteCancel,
     handleDelete,
   };
 };

@@ -1,6 +1,5 @@
 import { useAppDispatch } from '@/shared/state/store';
-import { ChangeEvent, useCallback } from 'react';
-import { toast } from 'react-toastify';
+import { ChangeEvent, useCallback, useState } from 'react';
 import { addPhotos } from '../../model/postSlice';
 
 export type PhotoData = {
@@ -19,8 +18,15 @@ export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export function useUploadPhotos(): {
   handleFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  isValidationModalOpen: boolean;
+  closeValidationModal: () => void;
 } {
   const dispatch = useAppDispatch();
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+
+  const closeValidationModal = useCallback(() => {
+    setIsValidationModalOpen(false);
+  }, []);
 
   const handleFileChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>): void => {
@@ -31,13 +37,19 @@ export function useUploadPhotos(): {
         return;
       }
 
+      // Validate file size
       const oversizedFiles = Array.from(files).filter(
         (file) => file.size > MAX_FILE_SIZE_BYTES
       );
-      if (oversizedFiles.length > 0) {
-        toast.error(
-          `The photo must be less than ${MAX_FILE_SIZE_MB}Mb and have JPEG or PNG format`
-        );
+
+      // Validate file format
+      const invalidFormatFiles = Array.from(files).filter(
+        (file) => !file.type.startsWith('image/') ||
+                 (!file.type.includes('jpeg') && !file.type.includes('png'))
+      );
+
+      if (oversizedFiles.length > 0 || invalidFormatFiles.length > 0) {
+        setIsValidationModalOpen(true);
         input.value = '';
         return;
       }
@@ -84,5 +96,9 @@ export function useUploadPhotos(): {
     [dispatch]
   );
 
-  return { handleFileChange };
+  return {
+    handleFileChange,
+    isValidationModalOpen,
+    closeValidationModal
+  };
 }

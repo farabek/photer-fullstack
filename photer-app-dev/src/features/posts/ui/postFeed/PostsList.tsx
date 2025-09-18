@@ -18,7 +18,7 @@ export const PostsList = ({
   ssrPosts,
   postId,
 }: Props): ReactElement => {
-  const { posts, triggerRef, isFetching, hasMore } = usePostsList({
+  const { posts, triggerRef, isFetching, hasMore, error, retry } = usePostsList({
     ssrPosts,
     profileId,
   });
@@ -43,45 +43,35 @@ export const PostsList = ({
     setSelectedPost(null);
   };
 
-  console.log('PostsList render:', {
-    postsCount: posts?.items?.length || 0,
-    isFetching,
-    hasMore,
-  });
-
   return (
     <div className="mt-12 flex flex-col">
       <div className="flex flex-wrap justify-center gap-[12px]">
         {posts?.items &&
         Array.isArray(posts.items) &&
         posts.items.length > 0 ? (
-          posts.items.map((post, index) => {
-            console.log(`Rendering PostItem ${index}:`, {
-              postId: post.id,
-              hasPhotos: post.photos?.length > 0,
-            });
-            return <PostItem key={post.id} post={post} />;
-          })
+          posts.items.map((post) => (
+          <PostItem key={post.id} post={post} />
+        ))
         ) : (
           <div className="py-8 text-center">
             <p className="text-lg font-medium text-gray-400">No posts found</p>
-            <p className="mt-2 text-sm text-gray-300">
-              Debug info:
-              {posts?.items &&
-                !Array.isArray(posts.items) &&
-                ' (posts.items is not array)'}
-              {posts?.items &&
-                Array.isArray(posts.items) &&
-                posts.items.length === 0 &&
-                ' (empty array)'}
-              {!posts?.items && ' (no posts object)'}
-            </p>
-            <p className="text-sm text-gray-300">
-              Check console for detailed logs
-            </p>
           </div>
         )}
       </div>
+
+      {error && (
+        <div className="col-span-full py-8 text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={retry}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            disabled={isFetching}
+          >
+            {isFetching ? 'Retrying...' : 'Try Again'}
+          </button>
+        </div>
+      )}
+
       <div
         ref={triggerRef}
         className="col-span-full py-4 text-center text-gray-500"

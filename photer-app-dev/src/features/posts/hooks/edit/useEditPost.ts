@@ -27,13 +27,8 @@ export function useEditPost({
 }: PropsHookEditPost): HookEditPost {
   const [description, setDescription] = useState(post.description);
   const editPostRef = useRef<HTMLDivElement>(null);
-  const descriptionRef = useRef(description);
   const [openConfirmClose, setOpenConfirmClose] = useState(false);
   const [updatePost] = useUpdatePostMutation();
-
-  useEffect(() => {
-    descriptionRef.current = description;
-  }, [description]);
 
   const handleChange = (text: string): void => {
     if (text.length <= MAX_SYMBOL_COUNT) {
@@ -42,12 +37,13 @@ export function useEditPost({
   };
 
   const confirmChange = useCallback((): void => {
-    if (post.description === descriptionRef.current) {
+    const hasChanges = description !== post.description;
+    if (!hasChanges) {
       onCloseAction();
     } else {
       setOpenConfirmClose(true);
     }
-  }, [onCloseAction, post.description]);
+  }, [description, post.description, onCloseAction]);
 
   const handleAccept = (): void => {
     setOpenConfirmClose(false);

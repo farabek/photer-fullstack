@@ -11,13 +11,6 @@ type Props = {
 export const PostItem = ({ post }: Props): ReactElement => {
   const [isOpenPost, setIsOpenPost] = useState(false);
 
-  console.log('PostItem:', {
-    postId: post.id,
-    hasPhotos: post.photos?.length > 0,
-    photosCount: post.photos?.length || 0,
-    photos: post.photos,
-    firstPhoto: post.photos?.[0],
-  });
 
   return (
     <>

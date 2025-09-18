@@ -15,6 +15,8 @@ type usePostsListReturn = {
   isFetching: boolean;
   triggerRef: RefObject<HTMLDivElement | null>;
   hasMore: boolean | undefined;
+  error: string | null;
+  retry: () => void;
 };
 export const usePostsList = ({
   ssrPosts,
@@ -22,7 +24,8 @@ export const usePostsList = ({
 }: Props): usePostsListReturn => {
   const dispatch = useAppDispatch();
   const triggerRef = useRef<HTMLDivElement>(null);
-  const [getProfilePosts, { isFetching }] = useLazyGetProfilePostsQuery();
+  const [getProfilePosts, { isFetching, error }] = useLazyGetProfilePostsQuery();
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const pageNumber = useSelector(
     (state: RootState) => state.post.cachedProfilePages
   );
@@ -41,15 +44,14 @@ export const usePostsList = ({
       : ssrPosts
   );
 
-  // Debug logging
+  // Handle errors from API calls
   useEffect(() => {
-    console.log('usePostsList:', {
-      profileId,
-      ssrPostsCount: ssrPosts?.items?.length || 0,
-      cachePostsCount: postsFromCache?.items?.length || 0,
-      currentPostsCount: posts?.items?.length || 0,
-    });
-  }, [profileId, ssrPosts, postsFromCache, posts, pageNumber]);
+    if (error) {
+      setFetchError('Failed to load posts. Please try again.');
+    } else {
+      setFetchError(null);
+    }
+  }, [error]);
 
   useEffect(() => {
     // Priority: postsFromCache (if has data) > ssrPosts > current posts
@@ -58,7 +60,6 @@ export const usePostsList = ({
       postsFromCache.items &&
       postsFromCache.items.length > 0
     ) {
-      console.log('Setting posts from cache:', postsFromCache.items.length);
       setPosts(postsFromCache);
     } else if (
       ssrPosts &&
@@ -66,7 +67,6 @@ export const usePostsList = ({
       ssrPosts.items.length > 0 &&
       !posts
     ) {
-      console.log('Setting posts from SSR:', ssrPosts.items.length);
       setPosts(ssrPosts);
     } else if (
       postsFromCache &&
@@ -76,7 +76,6 @@ export const usePostsList = ({
     ) {
       // Only set empty cache if we don't have SSR posts
       if (!ssrPosts || !ssrPosts.items || ssrPosts.items.length === 0) {
-        console.log('Setting posts from cache (empty):', postsFromCache);
         setPosts(postsFromCache);
       }
     }
@@ -105,9 +104,6 @@ export const usePostsList = ({
       postsFromCache.items[0].owner.userId &&
       profileId !== postsFromCache.items[0].owner.userId
     ) {
-      console.log(
-        'Cache contains posts from different user, invalidating cache'
-      );
       dispatch(cachedProfilePages(1));
       dispatch(postsApi.util.invalidateTags(['Posts']));
       getProfilePosts({ profileId, pageNumber: 1 });
@@ -128,6 +124,12 @@ export const usePostsList = ({
     getProfilePosts({ profileId, pageNumber });
   }, [dispatch, posts, profileId, pageNumber, getProfilePosts]);
 
+  const retry = useCallback(() => {
+    setFetchError(null);
+    dispatch(cachedProfilePages(1));
+    getProfilePosts({ profileId, pageNumber: 1 });
+  }, [dispatch, profileId, pageNumber, getProfilePosts]);
+
   useInfiniteScroll({ callback: fetchNewPartPosts, hasMore, triggerRef });
 
   return {
@@ -135,5 +137,7 @@ export const usePostsList = ({
     isFetching,
     triggerRef,
     hasMore,
+    error: fetchError,
+    retry,
   };
 };
