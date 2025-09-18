@@ -26,10 +26,7 @@ export function useUploadPhotos(): {
       const input = event.currentTarget;
       const files = event.target.files;
 
-      console.log('📁 File input changed:', files);
-
       if (!files || files.length === 0) {
-        console.log('❌ No files selected');
         return;
       }
 
@@ -86,9 +83,7 @@ export function useUploadPhotos(): {
       });
 
       Promise.all(newPhotosPromises).then((newPhotos) => {
-        console.log('📸 Photos processed:', newPhotos);
         dispatch(addPhotos(newPhotos));
-        console.log('📤 Dispatched addPhotos action');
       });
     },
     [dispatch]

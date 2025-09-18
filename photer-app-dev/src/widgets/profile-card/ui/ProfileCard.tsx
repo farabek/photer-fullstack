@@ -123,13 +123,6 @@ export const ProfileCard = ({
     profileId ||
     'UserName';
 
-  console.log('ProfileCard:', {
-    isOwner,
-    profileId,
-    username: username,
-  });
-
-  console.log('Final username selected:', username);
   const fullName = profileData
     ? `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim()
     : '';
@@ -194,10 +187,6 @@ export const ProfileCard = ({
       </div>
       {profileId && (
         <>
-          {console.log('ProfileCard passing to PostsList:', {
-            profileId,
-            postsCount: posts?.items?.length || 0,
-          })}
           <PostsList ssrPosts={posts} profileId={profileId} postId={postId} />
         </>
       )}
