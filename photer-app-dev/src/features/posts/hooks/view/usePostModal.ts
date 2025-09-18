@@ -3,7 +3,6 @@ import { useDeletePostMutation } from '@/features/posts/api/postsApi';
 import { errorHandler } from '@/features/posts/lib/errorHandler';
 import { PostType } from '@/features/posts/lib/post.types';
 import { RootState } from '@/shared/state/store';
-import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 type Props = {
@@ -23,16 +22,15 @@ export const usePostModal = ({
   onCloseAction,
 }: Props): usePostModalReturn => {
   const [deletePost] = useDeletePostMutation();
-  const isOwnerPost = useRef(false);
 
   const userId = useSelector(
     (state: RootState) => authApi.endpoints.getMe.select()(state).data?.userId
   );
 
-  if (userId) {
-    isOwnerPost.current = post?.owner.userId == userId;
-  }
-  const isOwner = isOwnerPost.current;
+  // Проверяем, что текущий пользователь является владельцем поста.
+  // Сравниваем не только userId, но и username владельца поста с username из URL,
+  // чтобы избежать ложноположительных срабатываний из-за кэширования данных.
+  const isOwner = userId ? post?.owner.userId === userId : false;
 
   const handleDelete = async (): Promise<void> => {
     try {

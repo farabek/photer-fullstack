@@ -11,16 +11,16 @@ export const CircleAvatar = ({ src, className }: Props): ReactNode => {
   return (
     <div
       className={cn(
-        'flex h-[36px] w-[36px] items-center justify-center overflow-hidden rounded-full object-cover',
+        'relative flex h-[36px] w-[36px] items-center justify-center overflow-hidden rounded-full object-cover',
         className
       )}
     >
       <Image
         src={src}
         alt={'icon'}
-        width={36}
-        height={36}
-        className="h-full w-full object-cover"
+        fill
+        sizes="36px"
+        className="object-cover"
         priority
         unoptimized
       />

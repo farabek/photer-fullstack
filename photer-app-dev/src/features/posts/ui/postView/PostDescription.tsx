@@ -11,13 +11,13 @@ export const PostDescription = ({ post }: Props): ReactNode => {
   const timeAgo = useTimeAgo(post.createdAt);
   return (
     <div className="relative flex gap-[12px]">
-      <div className="flex h-[36px] min-w-[36px] items-center justify-center overflow-hidden rounded-full object-cover">
+      <div className="relative flex h-[36px] min-w-[36px] items-center justify-center overflow-hidden rounded-full object-cover">
         <Image
           src={post.owner.avatarUrl || '/images/expired.png'}
           alt={'avatar'}
-          width={36}
-          height={36}
-          className="h-full w-full object-cover"
+          fill
+          sizes="36px"
+          className="object-cover"
           priority
           unoptimized
         />

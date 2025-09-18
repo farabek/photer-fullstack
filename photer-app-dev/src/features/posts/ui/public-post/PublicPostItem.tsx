@@ -27,6 +27,7 @@ export const PublicPostItem = ({ post }: Props): ReactElement => {
               src={photo}
               alt="Post image"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
               unoptimized
               priority={index === 0}
@@ -39,6 +40,8 @@ export const PublicPostItem = ({ post }: Props): ReactElement => {
         <AvatarWithName
           avatarUrl={post.owner.avatarUrl}
           userName={post.owner.userName}
+          className="text-blue-500"
+          avatarClassName="border-2 border-blue-500"
         />
       </Link>
 

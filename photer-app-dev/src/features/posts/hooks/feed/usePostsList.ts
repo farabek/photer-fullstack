@@ -36,12 +36,51 @@ export const usePostsList = ({
   );
 
   const [posts, setPosts] = useState<Posts | undefined>(
-    postsFromCache || ssrPosts
+    postsFromCache && postsFromCache.items && postsFromCache.items.length > 0
+      ? postsFromCache
+      : ssrPosts
   );
 
+  // Debug logging
   useEffect(() => {
-    setPosts(postsFromCache);
-  }, [postsFromCache]);
+    console.log('usePostsList:', {
+      profileId,
+      ssrPostsCount: ssrPosts?.items?.length || 0,
+      cachePostsCount: postsFromCache?.items?.length || 0,
+      currentPostsCount: posts?.items?.length || 0,
+    });
+  }, [profileId, ssrPosts, postsFromCache, posts, pageNumber]);
+
+  useEffect(() => {
+    // Priority: postsFromCache (if has data) > ssrPosts > current posts
+    if (
+      postsFromCache &&
+      postsFromCache.items &&
+      postsFromCache.items.length > 0
+    ) {
+      console.log('Setting posts from cache:', postsFromCache.items.length);
+      setPosts(postsFromCache);
+    } else if (
+      ssrPosts &&
+      ssrPosts.items &&
+      ssrPosts.items.length > 0 &&
+      !posts
+    ) {
+      console.log('Setting posts from SSR:', ssrPosts.items.length);
+      setPosts(ssrPosts);
+    } else if (
+      postsFromCache &&
+      postsFromCache.items &&
+      postsFromCache.items.length === 0 &&
+      postsFromCache.totalCount === 0
+    ) {
+      // Only set empty cache if we don't have SSR posts
+      if (!ssrPosts || !ssrPosts.items || ssrPosts.items.length === 0) {
+        console.log('Setting posts from cache (empty):', postsFromCache);
+        setPosts(postsFromCache);
+      }
+    }
+  }, [postsFromCache, ssrPosts, posts]);
 
   useEffect(() => {
     if (!postsFromCache && ssrPosts) {
@@ -62,8 +101,13 @@ export const usePostsList = ({
       postsFromCache &&
       postsFromCache.items &&
       postsFromCache.items.length > 0 &&
+      postsFromCache.items[0].owner &&
+      postsFromCache.items[0].owner.userId &&
       profileId !== postsFromCache.items[0].owner.userId
     ) {
+      console.log(
+        'Cache contains posts from different user, invalidating cache'
+      );
       dispatch(cachedProfilePages(1));
       dispatch(postsApi.util.invalidateTags(['Posts']));
       getProfilePosts({ profileId, pageNumber: 1 });

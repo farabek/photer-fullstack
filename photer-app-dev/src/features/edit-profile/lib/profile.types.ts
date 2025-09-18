@@ -8,6 +8,9 @@ export type ProfileGenIfo = {
   city: string;
   aboutMe: string;
   avatarUrl: string;
+  following: number;
+  followers: number;
+  publications: number;
 };
 
 export type Country = {

@@ -2,13 +2,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString, IsUrl } from 'class-validator';
 
 export enum SubscriptionPeriod {
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
   MONTHLY = 'MONTHLY',
-  YEARLY = 'YEARLY',
 }
 
 export enum PaymentProvider {
   STRIPE = 'STRIPE',
   PAYPAL = 'PAYPAL',
+  PAYME = 'PAYME',
 }
 
 export class CreateSubscriptionDto {

@@ -79,4 +79,22 @@ export class ProfileOutputDto {
     example: '2025-05-15T14:30:10.521Z',
   })
   updatedAt: string;
+
+  @ApiProperty({
+    description: 'Number of users this profile is following',
+    example: 150,
+  })
+  following: number;
+
+  @ApiProperty({
+    description: 'Number of followers this profile has',
+    example: 320,
+  })
+  followers: number;
+
+  @ApiProperty({
+    description: 'Number of publications (photos) this profile has',
+    example: 42,
+  })
+  publications: number;
 }

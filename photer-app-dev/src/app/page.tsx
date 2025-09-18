@@ -6,23 +6,35 @@ import { Toaster } from '@/shared/ui';
 import { PublicPostItem } from '@/features/posts/ui/public-post/PublicPostItem';
 
 async function getUsersCount(): Promise<number> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/users/count`);
-  if (!res.ok) {
-    throw new Error('Failed to fetch users count.');
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/users/count`);
+    if (!res.ok) {
+      throw new Error(
+        `Failed to fetch users count: ${res.status} ${res.statusText}`
+      );
+    }
+    const data = await res.json();
+    // API returns { count: number }
+    return typeof data === 'number' ? data : Number(data?.count ?? 0);
+  } catch (error) {
+    console.error('Error fetching users count:', error);
+    throw error;
   }
-  const data = await res.json();
-  // API returns { count: number }
-  return typeof data === 'number' ? data : Number(data?.count ?? 0);
 }
 
 async function getPosts(): Promise<Posts> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/posts?pageNumber=1&pageSize=4&sortDirection=desc&sortBy=createdAt`
-  );
-  if (!res.ok) {
-    throw new Error('Failed to fetch posts.');
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/posts?pageNumber=1&pageSize=8&sortDirection=desc&sortBy=createdAt`
+    );
+    if (!res.ok) {
+      throw new Error(`Failed to fetch posts: ${res.status} ${res.statusText}`);
+    }
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    throw error;
   }
-  return res.json();
 }
 
 export const revalidate = 60;

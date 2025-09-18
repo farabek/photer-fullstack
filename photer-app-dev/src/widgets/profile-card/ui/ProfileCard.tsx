@@ -20,6 +20,8 @@ type Props = {
   profileId?: string;
   posts?: Posts;
   profile?: ProfileGenIfo;
+  postId?: string;
+  username?: string;
 };
 
 export const ProfileCard = ({
@@ -28,6 +30,7 @@ export const ProfileCard = ({
   profileId,
   posts,
   profile,
+  postId,
 }: Props): ReactElement => {
   const dispatch = useAppDispatch();
   const [isEditProfile, setIsEditProfile] = useState(false);
@@ -106,27 +109,61 @@ export const ProfileCard = ({
     return <EditProfile onClose={handleCloseEditProfile} />;
   }
 
-  const displayName = user
-    ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username
-    : 'URLProfile';
+  // Используем данные из profile (SSR) в приоритете, затем из user (Redux) только для владельца
+  const profileData = profile || (isOwner ? user : null);
+  // Если есть посты, берем username из первого поста
+  const usernameFromPosts = posts?.items?.[0]?.owner?.userName;
+
+  // Для авторизованного пользователя на своей странице приоритет у user.username
+  // Если username нет, используем profileId как fallback (он совпадает с userId)
+  const username =
+    (isOwner && user?.username) ||
+    profileData?.username ||
+    usernameFromPosts ||
+    profileId ||
+    'UserName';
+
+  console.log('ProfileCard:', {
+    isOwner,
+    profileId,
+    username: username,
+  });
+
+  console.log('Final username selected:', username);
+  const fullName = profileData
+    ? `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim()
+    : '';
+
+  // Получаем аватар - если это массив, берем первый элемент
+  const avatarUrl = profileData?.avatarUrl
+    ? Array.isArray(profileData.avatarUrl)
+      ? profileData.avatarUrl[0]
+      : profileData.avatarUrl
+    : null;
+
   return (
     <div>
       <div className={'flex gap-9'}>
-        <div className="h-[204px] w-[204px] flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
+        <div className="relative h-[204px] w-[204px] flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
           <Image
-            src={user?.avatarUrl || defaultAvatar}
+            src={avatarUrl || defaultAvatar}
             alt="avatar"
-            width={204}
-            height={204}
-            className={'h-full w-full object-cover'}
+            fill
+            sizes="204px"
+            className={'object-cover'}
             priority
             unoptimized
           />
         </div>
         <div className={'flex w-full flex-col gap-5'}>
           <div className={'flex justify-between'}>
-            <h2 className={'h1-text'}>{displayName}</h2>
-            {isAuthorized && (
+            <div className={'flex flex-col'}>
+              <h2 className={'h1-text'}>{username}</h2>
+              {fullName && (
+                <p className={'text-light-900 text-base'}>{fullName}</p>
+              )}
+            </div>
+            {isAuthorized && isOwner && (
               <ProfileButtons
                 callback={handleOpenEditProfile}
                 isOwner={isOwner}
@@ -134,10 +171,14 @@ export const ProfileCard = ({
             )}
           </div>
 
-          <ProfileStats following={2218} followers={2218} publications={2218} />
+          <ProfileStats
+            following={profile?.following || 0}
+            followers={profile?.followers || 0}
+            publications={profile?.publications || 0}
+          />
           <div>
             <p>
-              {user?.aboutMe || (
+              {profileData?.aboutMe || (
                 <>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
                   do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -151,7 +192,15 @@ export const ProfileCard = ({
           </div>
         </div>
       </div>
-      {profileId && <PostsList ssrPosts={posts} profileId={profileId} />}
+      {profileId && (
+        <>
+          {console.log('ProfileCard passing to PostsList:', {
+            profileId,
+            postsCount: posts?.items?.length || 0,
+          })}
+          <PostsList ssrPosts={posts} profileId={profileId} postId={postId} />
+        </>
+      )}
     </div>
   );
 };

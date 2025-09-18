@@ -11,20 +11,33 @@ type Props = {
 export const PostItem = ({ post }: Props): ReactElement => {
   const [isOpenPost, setIsOpenPost] = useState(false);
 
+  console.log('PostItem:', {
+    postId: post.id,
+    hasPhotos: post.photos?.length > 0,
+    photosCount: post.photos?.length || 0,
+    photos: post.photos,
+    firstPhoto: post.photos?.[0],
+  });
+
   return (
     <>
       <div
         className={'relative h-57 w-[250px]'}
         onClick={() => setIsOpenPost(true)}
       >
-        {post.photos.length > 0 && (
+        {post.photos.length > 0 ? (
           <Image
             src={post.photos[0]}
             alt={'post image'}
             unoptimized
             fill
+            sizes="250px"
             className="object-cover"
           />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-500">
+            No Image
+          </div>
         )}
       </div>
       {isOpenPost && (

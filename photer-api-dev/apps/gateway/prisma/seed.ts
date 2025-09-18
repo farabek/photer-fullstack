@@ -25,7 +25,8 @@ async function main() {
     create: {
       id: 'sunset-photo',
       title: 'Beautiful Sunset',
-      description: 'A stunning sunset over the mountains',
+      description:
+        'A stunning sunset over the mountains with golden rays illuminating the peaks and creating a breathtaking view that takes your breath away',
       url: 'https://images.unsplash.com/photo-1501973801540-537f08ccae7b?w=1200',
       tags: 'nature,sunset,mountains',
       userId: user.id,
@@ -38,7 +39,8 @@ async function main() {
     create: {
       id: 'city-photo',
       title: 'City Lights',
-      description: 'Urban night photography',
+      description:
+        'Urban night photography capturing the vibrant city lights and busy streets filled with people and cars moving through the night',
       url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200',
       tags: 'urban,night,city',
       userId: user.id,
@@ -68,6 +70,52 @@ async function main() {
     },
   });
 
+  // Создаем профили для пользователей
+  const profile1 = await prisma.profile.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: {
+      userId: user.id,
+      username: user.username,
+      firstName: 'Test',
+      lastName: 'User',
+      city: 'Moscow',
+      country: 'Russia',
+      aboutMe: 'Test user profile',
+      avatarUrl: [],
+    },
+  });
+
+  const profile2 = await prisma.profile.upsert({
+    where: { userId: user2.id },
+    update: {},
+    create: {
+      userId: user2.id,
+      username: user2.username,
+      firstName: 'John',
+      lastName: 'Doe',
+      city: 'New York',
+      country: 'USA',
+      aboutMe: 'Photography enthusiast',
+      avatarUrl: [],
+    },
+  });
+
+  const profile3 = await prisma.profile.upsert({
+    where: { userId: user3.id },
+    update: {},
+    create: {
+      userId: user3.id,
+      username: user3.username,
+      firstName: 'Jane',
+      lastName: 'Smith',
+      city: 'London',
+      country: 'UK',
+      aboutMe: 'Nature photographer',
+      avatarUrl: [],
+    },
+  });
+
   // Добавляем фото для новых пользователей
   const photo3 = await prisma.photo.upsert({
     where: { id: 'portrait-photo' },
@@ -75,7 +123,8 @@ async function main() {
     create: {
       id: 'portrait-photo',
       title: 'Portrait Photography',
-      description: 'Professional portrait session',
+      description:
+        'Professional portrait session with carefully arranged lighting and composition that highlights the subject personality and creates an artistic atmosphere',
       url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?w=1200',
       tags: 'portrait,professional,photography',
       userId: user2.id,
@@ -88,7 +137,8 @@ async function main() {
     create: {
       id: 'landscape-photo',
       title: 'Mountain Landscape',
-      description: 'Breathtaking mountain views',
+      description:
+        'Breathtaking mountain views with snow-capped peaks and valleys filled with lush greenery that create a perfect landscape photography opportunity',
       url: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200',
       tags: 'landscape,mountains,nature',
       userId: user3.id,
@@ -100,7 +150,8 @@ async function main() {
     {
       id: 'forest-photo',
       title: 'Deep Forest',
-      description: 'Misty morning in the forest',
+      description:
+        'Misty morning in the forest with dew-covered leaves and sunlight filtering through the canopy creating a magical and serene atmosphere',
       url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200',
       tags: 'nature,forest,morning',
       userId: user.id,
@@ -108,7 +159,8 @@ async function main() {
     {
       id: 'sea-photo',
       title: 'Sea Waves',
-      description: 'Blue waves on the shore',
+      description:
+        'Blue waves on the shore crashing against the rocks with white foam and sea spray creating a dynamic and powerful natural scene',
       url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200',
       tags: 'sea,water,waves',
       userId: user2.id,
@@ -116,7 +168,8 @@ async function main() {
     {
       id: 'desert-photo',
       title: 'Desert Dunes',
-      description: 'Golden sand dunes at sunset',
+      description:
+        'Golden sand dunes at sunset with warm orange and red hues painting the sky and casting long shadows across the desert landscape',
       url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200',
       tags: 'desert,sand,sunset',
       userId: user3.id,
@@ -124,7 +177,8 @@ async function main() {
     {
       id: 'bridge-photo',
       title: 'City Bridge',
-      description: 'Bridge over the river at night',
+      description:
+        'Bridge over the river at night with beautiful lights reflecting on the water surface creating a magical atmosphere that captivates everyone who sees it zxcvbnmasdfgh',
       url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200',
       tags: 'city,bridge,night',
       userId: user.id,
@@ -132,7 +186,8 @@ async function main() {
     {
       id: 'mountain-lake-photo',
       title: 'Mountain Lake',
-      description: 'Crystal clear lake in the mountains',
+      description:
+        'Crystal clear lake in the mountains surrounded by pine trees and rocky cliffs reflecting the blue sky and creating a peaceful natural paradise',
       url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200',
       tags: 'mountains,lake,clear',
       userId: user2.id,
@@ -140,7 +195,8 @@ async function main() {
     {
       id: 'field-flowers-photo',
       title: 'Field of Flowers',
-      description: 'Colorful flowers in the field',
+      description:
+        'Colorful flowers in the field blooming in spring with various shades of red, yellow, and purple creating a vibrant and cheerful meadow scene',
       url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200',
       tags: 'field,flowers,colorful',
       userId: user3.id,
@@ -148,7 +204,8 @@ async function main() {
     {
       id: 'night-sky-photo',
       title: 'Night Sky',
-      description: 'Milky Way over the mountains',
+      description:
+        'Milky Way over the mountains visible in the night sky with thousands of stars forming a bright galactic band across the heavens',
       url: 'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=1200',
       tags: 'night,sky,milkyway',
       userId: user.id,
@@ -156,7 +213,8 @@ async function main() {
     {
       id: 'forest-path-photo',
       title: 'Forest Path',
-      description: 'Small path through the forest',
+      description:
+        'Small path through the dense forest winding between tall trees and bushes leading to a hidden clearing in the woods',
       url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200',
       tags: 'forest,path,trees',
       userId: user2.id,

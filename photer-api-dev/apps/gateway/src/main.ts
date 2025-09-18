@@ -26,9 +26,27 @@ async function bootstrap() {
   // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Photer API Gateway')
-    .setDescription('The Photer API Gateway service')
+    .setDescription('API for Photer application - photo sharing platform')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addServer('http://localhost:3001', 'Development server')
+    .addServer('https://api.photer.com', 'Production server')
+    .addTag('Auth', 'Authentication and authorization endpoints')
+    .addTag('User', 'User-related endpoints')
+    .addTag('Device', 'Device management endpoints')
+    .addTag('Profile', 'User profile management endpoints')
+    .addTag('Posts', 'Posts management endpoints')
+    .addTag('Subscriptions', 'Subscription and payment endpoints')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

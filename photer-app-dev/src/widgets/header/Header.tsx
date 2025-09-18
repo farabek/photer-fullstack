@@ -1,20 +1,40 @@
 // src/widgets/header/Header.tsx
 'use client';
 
-import { ReactElement, useState } from 'react';
+import { ReactElement, useMemo, useState } from 'react';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { SelectItem } from '../SelectBox/SelectItem';
 import { Button } from '@/shared/ui/button/Button';
 import { SelectBox } from '../SelectBox/SelectBox';
+import { useSelector } from 'react-redux';
+import { createSelector } from '@reduxjs/toolkit';
+import { authApi } from '@/features/auth/api/authApi';
 
 type Props = {
   withLoginBtn?: boolean;
 };
 
+// Memoized selector for auth user from RTK Query cache
+const getMeSelector = authApi.endpoints.getMe.select();
+const selectAuthData = createSelector([getMeSelector], (queryState) => ({
+  data: queryState.data,
+}));
+
 export const Header = ({ withLoginBtn = false }: Props): ReactElement => {
   const [language, setLanguage] = useState<string>('en');
+  const pathname = usePathname();
+  const authData = useSelector(selectAuthData);
+  const userId = authData.data?.userId;
+
+  // Используем данные из RTK Query кэша для проверки авторизации
+  const isAuthenticated = !!authData.data;
+
+  // Hide Log In / Sign Up when user is authenticated (on any page)
+  const hideAuthButtons = isAuthenticated;
+  const showLoginButtons = withLoginBtn && !hideAuthButtons;
 
   return (
     <header className="bg-dark-900 text-light-100 border-dark-100 sticky top-0 z-50 h-[60px] w-full border-b-2 px-15 py-3 max-md:px-[15px]">
@@ -36,7 +56,7 @@ export const Header = ({ withLoginBtn = false }: Props): ReactElement => {
               <span className="max-md:hidden">Русский</span>
             </SelectItem>
           </SelectBox>
-          {withLoginBtn && (
+          {showLoginButtons && (
             <>
               <Button asChild variant="text" className="w-[100px]">
                 <Link href="/sign-in">Log In</Link>

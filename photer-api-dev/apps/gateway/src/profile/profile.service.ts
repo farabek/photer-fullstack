@@ -47,7 +47,7 @@ export class ProfileService {
       },
     });
 
-    return this.mapToProfileOutputDto(profile);
+    return await this.mapToProfileOutputDto(profile);
   }
 
   /**
@@ -62,22 +62,67 @@ export class ProfileService {
       throw new NotFoundException('Profile not found');
     }
 
-    return this.mapToProfileOutputDto(profile);
+    return await this.mapToProfileOutputDto(profile);
   }
 
   /**
-   * Получает профиль по ID профиля
+   * Получает профиль по ID профиля, username или userId
    */
   async getProfileById(id: string): Promise<ProfileOutputDto> {
-    const profile = await this.prisma.profile.findUnique({
+    console.log(
+      'ProfileService.getProfileById called with id/username/userId:',
+      id,
+    );
+
+    // Сначала попробуем найти по username (для фронтенда)
+    let profile = await this.prisma.profile.findUnique({
+      where: { username: id },
+    });
+
+    if (profile) {
+      console.log('Profile found by username:', id, 'YES');
+      console.log('Profile data:', {
+        id: profile.id,
+        username: profile.username,
+        userId: profile.userId,
+      });
+      return await this.mapToProfileOutputDto(profile);
+    }
+
+    // Если не нашли по username, попробуем найти по profile.id
+    console.log('Profile not found by username, trying by profile id:', id);
+    profile = await this.prisma.profile.findUnique({
       where: { id },
     });
 
-    if (!profile) {
-      throw new NotFoundException('Profile not found');
+    if (profile) {
+      console.log('Profile found by profile id:', id, 'YES');
+      console.log('Profile data:', {
+        id: profile.id,
+        username: profile.username,
+        userId: profile.userId,
+      });
+      return await this.mapToProfileOutputDto(profile);
     }
 
-    return this.mapToProfileOutputDto(profile);
+    // Если не нашли по profile.id, попробуем найти по userId
+    console.log('Profile not found by profile id, trying by userId:', id);
+    profile = await this.prisma.profile.findUnique({
+      where: { userId: id },
+    });
+
+    if (profile) {
+      console.log('Profile found by userId:', id, 'YES');
+      console.log('Profile data:', {
+        id: profile.id,
+        username: profile.username,
+        userId: profile.userId,
+      });
+      return await this.mapToProfileOutputDto(profile);
+    }
+
+    console.log('Profile not found by userId either:', id);
+    throw new NotFoundException('Profile not found');
   }
 
   /**
@@ -92,7 +137,7 @@ export class ProfileService {
       throw new NotFoundException('Profile not found');
     }
 
-    return this.mapToProfileOutputDto(profile);
+    return await this.mapToProfileOutputDto(profile);
   }
 
   /**
@@ -135,7 +180,7 @@ export class ProfileService {
       data: updateProfileDto,
     });
 
-    return this.mapToProfileOutputDto(updatedProfile);
+    return await this.mapToProfileOutputDto(updatedProfile);
   }
 
   /**
@@ -184,7 +229,18 @@ export class ProfileService {
   /**
    * Преобразует данные из Prisma в ProfileOutputDto
    */
-  private mapToProfileOutputDto(profile: Profile): ProfileOutputDto {
+  private async mapToProfileOutputDto(
+    profile: Profile,
+  ): Promise<ProfileOutputDto> {
+    // Подсчитываем количество фотографий пользователя
+    const publicationsCount = await this.prisma.photo.count({
+      where: { userId: profile.userId },
+    });
+
+    // TODO: Добавить подсчет following/followers когда будет создана таблица связей
+    const followingCount = 0;
+    const followersCount = 0;
+
     return {
       id: profile.id,
       username: profile.username,
@@ -197,6 +253,9 @@ export class ProfileService {
       avatarUrl: profile.avatarUrl,
       createdAt: profile.createdAt.toISOString(),
       updatedAt: profile.updatedAt.toISOString(),
+      following: followingCount,
+      followers: followersCount,
+      publications: publicationsCount,
     };
   }
 }

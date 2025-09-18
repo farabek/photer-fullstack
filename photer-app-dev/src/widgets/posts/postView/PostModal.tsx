@@ -24,7 +24,7 @@ export const PostModal = ({ onCloseAction, post }: Props): ReactNode => {
   return (
     <PostModalWrapper onCloseAction={onCloseAction}>
       {!isEdit ? (
-        <ViewPost isAuthorized={!!userId} post={post}>
+        <ViewPost isAuthorized={!!userId} post={post} isOwner={isOwner}>
           {isOwner && (
             <EllipsisMenu
               menuItems={[

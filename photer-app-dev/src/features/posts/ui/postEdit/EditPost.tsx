@@ -45,14 +45,15 @@ export const EditPost = ({ post, onCloseAction }: Props): ReactNode => {
         </button>
       </div>
       <div className="flex h-full">
-        <Carousel className="flex-1">
+        <Carousel className="relative flex-1">
           {post.photos.map((photo, index: number) => (
             <Image
               src={photo}
               alt={'Post image'}
               key={index}
-              width={1000}
-              height={1000}
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
               unoptimized
             />
           ))}

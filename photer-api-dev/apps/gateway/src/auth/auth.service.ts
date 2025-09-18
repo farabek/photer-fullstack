@@ -614,6 +614,7 @@ export class AuthService {
     return {
       userId: user.id,
       email: user.email,
+      username: user.username,
     };
   }
 

@@ -28,12 +28,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Profile')
 @Controller('api/v1/profile')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get profile of the currently authenticated user' })
   @ApiResponse({
     status: 200,

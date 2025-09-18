@@ -51,9 +51,16 @@ export class SubscriptionsService {
       },
     });
 
-    // В реальном приложении здесь будет интеграция с платежным провайдером
-    // Пока возвращаем mock URL для оплаты
-    const paymentUrl = `${createSubscriptionDto.baseUrl}/payment/${subscription.id}`;
+    // В реальном приложении здесь будет интеграция с провайдерами (Stripe/PayPal/Payme)
+    // На время интеграции возвращаем URL-заглушку по провайдеру
+    let paymentUrl = `${createSubscriptionDto.baseUrl}/payment/${subscription.id}`;
+    if (createSubscriptionDto.paymentProvider === 'PAYME') {
+      const paymeBase =
+        process.env.PAYME_STAGING_URL || 'https://checkout.test.paycom.uz';
+      const merchantId = process.env.PAYME_MERCHANT_ID || 'test-merchant';
+      // Заглушка построения URL (в реальной интеграции использовать параметры Payme)
+      paymentUrl = `${paymeBase}?m=${merchantId}&return=${encodeURIComponent(createSubscriptionDto.baseUrl + '/payment/callback')}`;
+    }
 
     return { url: paymentUrl };
   }
@@ -209,8 +216,10 @@ export class SubscriptionsService {
     switch (period) {
       case 'MONTHLY':
         return new Date(now.setMonth(now.getMonth() + 1));
-      case 'YEARLY':
-        return new Date(now.setFullYear(now.getFullYear() + 1));
+      case 'WEEKLY':
+        return new Date(now.setDate(now.getDate() + 7));
+      case 'DAILY':
+        return new Date(now.setDate(now.getDate() + 1));
       default:
         throw new BadRequestException('Invalid subscription period');
     }

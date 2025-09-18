@@ -14,29 +14,30 @@ type Props = {
   post: PostType;
   children?: ReactNode;
   isAuthorized: boolean;
+  isOwner: boolean;
 };
 
 export const ViewPost = ({
   post,
   children,
   isAuthorized,
+  isOwner,
 }: Props): ReactNode => {
   return (
-    <div className="bg-dark-300 border-dark-100 flex w-full max-w-[1280px] overflow-hidden rounded-[2px] border-[1px]">
+    <div className="bg-dark-300 border-dark-100 flex h-full w-full overflow-hidden">
       {/* Левая часть — фото со скроллом при необходимости */}
       <div className="flex-1 overflow-y-auto">
-        <Carousel className="h-full w-full">
+        <Carousel className="relative h-full w-full">
           {post.photos.map((photo, index) => (
             <Image
               key={index}
               src={photo}
               alt="Post image"
-              width={800}
-              height={800}
+              fill
               unoptimized
               priority={index === 0}
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="h-full w-full object-cover"
+              className="object-cover"
             />
           ))}
         </Carousel>
@@ -64,7 +65,7 @@ export const ViewPost = ({
         {/* Низ: инфо + форма добавления комментария */}
         <div className="border-dark-100 flex flex-col pt-4">
           <PostInfo createdDate={post.createdAt} isAuthorized={isAuthorized} />
-          {isAuthorized && <AddComment />}
+          {isOwner && <AddComment />}
         </div>
       </div>
     </div>

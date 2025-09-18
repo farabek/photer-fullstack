@@ -12,10 +12,10 @@ export const PostModalWrapper = ({
   onCloseAction,
 }: Props): ReactNode => {
   return (
-    <div className="fixed top-1/2 left-1/2 z-10 mx-auto flex w-full max-w-[972px] -translate-x-1/2 -translate-y-1/2">
+    <div className="fixed top-[84px] left-[124px] z-10 h-[380px] w-[972px] border border-gray-600">
       <button
         onClick={() => onCloseAction()}
-        className="absolute top-[-34px] right-[-38px] cursor-pointer outline-none"
+        className="absolute top-[-8px] right-[-8px] z-20 cursor-pointer rounded-full bg-black/50 p-1 transition-colors outline-none hover:bg-black/70"
       >
         <IconSprite iconName="close" />
       </button>

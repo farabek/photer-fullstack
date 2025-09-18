@@ -275,14 +275,14 @@ export class PostsController {
     description: 'Not Found',
   })
   async getUserPosts(
-    @Param('userId') userId: string,
+    @Param('userId') userIdentifier: string,
     @Query('pageNumber') pageNumber: number = 1,
     @Query('pageSize') pageSize: number = 8,
     @Query('sortDirection') sortDirection: 'asc' | 'desc' = 'desc',
     @Query('sortBy') sortBy: string = 'createdAt',
   ) {
     return this.postsService.getUserPosts(
-      userId,
+      userIdentifier,
       pageNumber,
       pageSize,
       sortDirection,

@@ -2,7 +2,8 @@ import { SubmitHandler, useForm, UseFormReturn } from 'react-hook-form';
 import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '@/shared/state/store';
 import { closeModal } from '@/shared/state/slices/modalSlice';
-import { useCreatePostMutation } from '../../api/postsApi';
+import { useCreatePostMutation } from '@/features/posts/api/postsApi';
+import { errorHandler } from '../../lib/errorHandler';
 import { goToStep, resetPhotoFilter, resetState } from '../../model/postSlice';
 
 const MAX_DESCRIPTION_LENGTH = 500;
@@ -71,7 +72,7 @@ export function usePostDescription(onClose: () => void): {
           const file = new File([blob], filename, {
             type: blob.type || 'image/jpeg',
           });
-          formData.append('photos', file);
+          formData.append('files', file);
         } catch (error) {
           console.error(`Error fetching photo ${i}:`, error);
         }
@@ -85,7 +86,7 @@ export function usePostDescription(onClose: () => void): {
       dispatch(resetState());
       onClose();
     } catch (error) {
-      console.error('Ошибка:', error);
+      errorHandler(error);
     }
   };
 

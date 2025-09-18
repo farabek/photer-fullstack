@@ -190,10 +190,10 @@ export class PostsService {
   }
 
   /**
-   * Получает все посты пользователя
+   * Получает все посты пользователя по userId или username
    */
   async getUserPosts(
-    userId: string,
+    userIdentifier: string,
     pageNumber: number = 1,
     pageSize: number = 8,
     sortDirection: 'asc' | 'desc' = 'desc',
@@ -205,12 +205,60 @@ export class PostsService {
     page: number;
     pageSize: number;
   }> {
+    console.log('PostsService.getUserPosts called with:', {
+      userIdentifier,
+      pageNumber,
+      pageSize,
+      sortDirection,
+      sortBy,
+    });
+
+    let userId: string | null = null;
+
+    // Сначала пытаемся найти пользователя напрямую по userIdentifier как userId
+    console.log('Trying to find user by id:', userIdentifier);
+    const userById = await this.prisma.user.findUnique({
+      where: { id: userIdentifier },
+      select: { id: true },
+    });
+
+    if (userById) {
+      userId = userById.id;
+      console.log('Found user by id:', userId);
+    } else {
+      // Если не найден по id, ищем по username через профиль
+      console.log(
+        'User not found by id, trying to find by username:',
+        userIdentifier,
+      );
+      const profile = await this.prisma.profile.findUnique({
+        where: { username: userIdentifier },
+        select: { userId: true },
+      });
+
+      if (profile) {
+        userId = profile.userId;
+        console.log('Found userId:', userId, 'for username:', userIdentifier);
+      } else {
+        console.log('Profile not found for username:', userIdentifier);
+        return {
+          items: [],
+          totalCount: 0,
+          pagesCount: 0,
+          page: pageNumber,
+          pageSize,
+        };
+      }
+    }
+
     const skip = (pageNumber - 1) * pageSize;
 
     // Получаем общее количество постов пользователя
     const totalCount = await this.prisma.photo.count({
       where: { userId },
     });
+
+    console.log('Total posts count for userId:', userId, 'is:', totalCount);
 
     // Получаем посты пользователя с пагинацией и сортировкой
     const posts = await this.prisma.photo.findMany({
@@ -229,8 +277,25 @@ export class PostsService {
       },
     });
 
+    console.log('Found posts for userId:', userId, 'count:', posts.length);
+    if (posts.length > 0) {
+      console.log('First post user info:', {
+        userId: posts[0].user.id,
+        username: posts[0].user.username,
+        hasProfile: !!posts[0].user.profile,
+      });
+    }
+
     const items = posts.map((post) => this.mapToPostOutputDto(post));
     const pagesCount = Math.ceil(totalCount / pageSize);
+
+    console.log('Returning posts result:', {
+      itemsCount: items.length,
+      totalCount,
+      pagesCount,
+      page: pageNumber,
+      pageSize,
+    });
 
     return {
       items,
@@ -248,10 +313,17 @@ export class PostsService {
     // Разбираем URL фотографий (хранятся через запятую)
     const photos = post.url ? post.url.split(',').filter(Boolean) : [];
 
+    console.log('mapToPostOutputDto:', {
+      postId: post.id,
+      rawUrl: post.url,
+      photosCount: photos.length,
+      photos,
+    });
+
     // Создаем owner информацию
     const owner: PostOwnerOutputDto = {
       userId: post.user.id,
-      userName: post.user.username,
+      userName: post.user.profile?.username || post.user.username,
       firstName: post.user.profile?.firstName || null,
       lastName: post.user.profile?.lastName || null,
       avatarUrl: post.user.profile?.avatarUrl?.[0] || null,
