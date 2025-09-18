@@ -25,6 +25,21 @@ export const store = configureStore({
     }).concat(baseApi.middleware, countryApi.middleware),
 });
 
+// Debug middleware для отслеживания всех actions
+if (process.env.NODE_ENV === 'development') {
+  store.subscribe(() => {
+    const state = store.getState();
+    console.log('🏪 Redux state updated:', {
+      post: {
+        currentStep: state.post.currentStep,
+        photosCount: state.post.photos.length,
+        currentPhotoIndex: state.post.currentPhotoIndex,
+        description: state.post.description,
+      }
+    });
+  });
+}
+
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 

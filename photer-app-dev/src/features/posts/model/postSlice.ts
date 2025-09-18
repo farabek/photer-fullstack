@@ -30,13 +30,33 @@ const postSlice = createSlice({
       state,
       action: PayloadAction<Omit<PhotoSettings, 'originalUrl'>[]>
     ) => {
-      const photosWithDefaults = action.payload.map((photo) => ({
-        ...photo,
-        cropRatio: 'Original',
-        originalUrl: photo.url,
-      }));
+      console.log('🔄 Redux addPhotos reducer called with:', action.payload);
+      console.log('📊 Payload length:', action.payload.length);
+      console.log('📊 First photo sample:', action.payload[0]);
+
+      const photosWithDefaults = action.payload.map((photo, index) => {
+        const photoWithDefaults = {
+          ...photo,
+          cropRatio: 'Original' as const,
+          originalUrl: photo.url,
+        };
+        console.log(`📷 Photo ${index} with defaults:`, {
+          url: photoWithDefaults.url,
+          originalUrl: photoWithDefaults.originalUrl,
+          cropRatio: photoWithDefaults.cropRatio
+        });
+        return photoWithDefaults;
+      });
+
+      console.log('📷 Photos with defaults:', photosWithDefaults);
       state.photos = [...state.photos, ...photosWithDefaults];
       state.currentStep = 'crop';
+
+      console.log('✅ Redux state updated:', {
+        photos: state.photos.length,
+        step: state.currentStep,
+        photosArray: state.photos.map(p => ({ url: p.url, originalUrl: p.originalUrl }))
+      });
     },
 
     // выбираем определенной фото по индексу...
