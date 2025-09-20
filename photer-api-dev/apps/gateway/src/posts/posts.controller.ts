@@ -114,17 +114,75 @@ export class PostsController {
     description: 'Unauthorized',
   })
   async createPost(
-    @Body() createPostDto: CreatePostDto,
+    @Body() body: any, // Получаем все поля из FormData
     @UploadedFiles() files: any[], // Исправлено: убрал Express.Multer.File
     @Req() req: any,
   ): Promise<PostOutputDto> {
     const userId = req.user?.userId;
 
-    // Временно используем mock URLs для фотографий
-    // В реальном приложении здесь будет загрузка в storage
-    const photoUrls = files?.map((file) => file.path) || [
-      'https://storage.example.com/1/photo1.jpg',
-    ];
+    // Парсим данные из FormData
+    const description = body.description || '';
+    let tags: string[] = [];
+    try {
+      tags = body.tags ? JSON.parse(body.tags) : [];
+    } catch (error) {
+      console.warn('Failed to parse tags:', body.tags, error);
+      tags = [];
+    }
+
+    const createPostDto: CreatePostDto = {
+      description,
+      tags,
+    };
+
+    // Парсим теги из JSON строки если они есть
+    if (createPostDto.tags && typeof createPostDto.tags === 'string') {
+      try {
+        createPostDto.tags = JSON.parse(createPostDto.tags as any);
+      } catch (e) {
+        console.log('Failed to parse tags, keeping as string');
+      }
+    }
+
+    console.log('📸 Create post called with:', {
+      createPostDto,
+      filesCount: files?.length || 0,
+      userId,
+      files: files?.map((f) => ({
+        originalname: f.originalname,
+        mimetype: f.mimetype,
+        size: f.size,
+      })),
+    });
+
+    // Сохраняем файлы локально и возвращаем пути к ним
+    const photoUrls: string[] = [];
+
+    if (files?.length > 0) {
+      const fs = require('fs');
+      const path = require('path');
+
+      // Создаем папку для загрузок если её нет
+      const uploadsDir = path.join(process.cwd(), 'uploads', userId);
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      for (const file of files) {
+        const filename = `${Date.now()}_${file.originalname || 'photo.jpg'}`;
+        const filepath = path.join(uploadsDir, filename);
+
+        // Сохраняем файл
+        fs.writeFileSync(filepath, file.buffer);
+
+        // Добавляем полный URL для доступа к файлу
+        photoUrls.push(
+          `http://localhost:3001/api/uploads/${userId}/${filename}`,
+        );
+      }
+    }
+
+    console.log('📷 Photo URLs to save:', photoUrls);
 
     return this.postsService.createPost(createPostDto, userId, photoUrls);
   }

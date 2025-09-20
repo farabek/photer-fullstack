@@ -50,6 +50,13 @@ export class PostOutputDto {
   description: string | null;
 
   @ApiProperty({
+    description: 'Array of post tags',
+    example: ['nature', 'photography', 'sunset'],
+    type: [String],
+  })
+  tags: string[];
+
+  @ApiProperty({
     description: 'Array of photo URLs',
     example: [
       'https://example.com/photo1.jpg',

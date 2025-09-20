@@ -20,6 +20,7 @@ type usePostModalReturn = {
   setIsDeleteModalOpen: (value: boolean) => void;
   handleDeleteConfirm: () => void;
   handleDeleteCancel: () => void;
+  handleDelete: () => Promise<void>;
 };
 
 export const usePostModal = ({
@@ -39,6 +40,14 @@ export const usePostModal = ({
   // Сравниваем не только userId, но и username владельца поста с username из URL,
   // чтобы избежать ложноположительных срабатываний из-за кэширования данных.
   const isOwner = userId ? post?.owner.userId === userId : false;
+
+  console.log('🔐 [POST MODAL] Auth check', {
+    userId,
+    postOwnerId: post?.owner.userId,
+    isOwner,
+    postId: post?.id,
+    timestamp: new Date().toISOString(),
+  });
 
   const handleDeleteConfirm = () => {
     setIsDeleteModalOpen(true);

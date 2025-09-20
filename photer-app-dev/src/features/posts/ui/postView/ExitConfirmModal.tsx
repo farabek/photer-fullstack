@@ -20,7 +20,8 @@ export const ExitConfirmModal = ({
   return (
     <Modal open={open} onClose={close} title="Close Publication Creation">
       <p className="mt-[7px] mb-[30px]">
-        Do you really want to close the creation of a publication? If you close everything will be deleted
+        Do you really want to close the creation of a publication? If you close
+        everything will be deleted
       </p>
       <div className="flex justify-end gap-[24px]">
         <Button variant="outlined" className="w-[120px]" onClick={onSaveDraft}>

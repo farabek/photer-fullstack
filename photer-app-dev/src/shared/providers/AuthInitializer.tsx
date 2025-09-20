@@ -69,10 +69,14 @@ export function AuthInitializer() {
     }
 
     const token = getCookie('accessToken');
-    if (!token) return;
+    if (!token) {
+      return;
+    }
 
     const payload = decodeJwt(token);
-    if (!payload?.exp) return;
+    if (!payload?.exp) {
+      return;
+    }
 
     const expMs = payload.exp * 1000; // exp в секундах
     const now = Date.now();
@@ -84,9 +88,10 @@ export function AuthInitializer() {
     refreshTimerRef.current = setTimeout(async () => {
       try {
         // Тихий refresh — бэкенд выставит Set-Cookie для новой пары токенов
-        const base = process.env.NODE_ENV === 'development'
-          ? '/api/v1'
-          : (process.env.NEXT_PUBLIC_BASE_URL || 'https://photer.ltd/api/v1');
+        const base =
+          process.env.NODE_ENV === 'development'
+            ? '/api/v1'
+            : process.env.NEXT_PUBLIC_BASE_URL || 'https://photer.ltd/api/v1';
         refreshInFlightRef.current = true;
         const resp = await fetch(`${base}/auth/refresh-token`, {
           method: 'POST',
@@ -122,14 +127,17 @@ export function AuthInitializer() {
   useEffect(() => {
     function maybeRefresh() {
       const token = getCookie('accessToken');
-      if (!token) return;
+      if (!token) {
+        return;
+      }
       const payload = decodeJwt(token);
       const now = Date.now();
       const expMs = (payload?.exp ? payload.exp * 1000 : now) - now;
       if (expMs <= 20_000 && !refreshInFlightRef.current) {
-        const base = process.env.NODE_ENV === 'development'
-          ? '/api/v1'
-          : (process.env.NEXT_PUBLIC_BASE_URL || 'https://photer.ltd/api/v1');
+        const base =
+          process.env.NODE_ENV === 'development'
+            ? '/api/v1'
+            : process.env.NEXT_PUBLIC_BASE_URL || 'https://photer.ltd/api/v1';
         fetch(`${base}/auth/refresh-token`, {
           method: 'POST',
           credentials: 'include',
@@ -138,7 +146,9 @@ export function AuthInitializer() {
     }
     window.addEventListener('focus', maybeRefresh);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') maybeRefresh();
+      if (document.visibilityState === 'visible') {
+        maybeRefresh();
+      }
     });
     return () => {
       window.removeEventListener('focus', maybeRefresh);
@@ -149,7 +159,9 @@ export function AuthInitializer() {
   useEffect(() => {
     const interval = setInterval(() => {
       const token = getCookie('accessToken');
-      if (!token) return;
+      if (!token) {
+        return;
+      }
       // Если токен изменился (после refresh), пересоздадим основной таймер
       if (lastAccessTokenRef.current !== token) {
         lastAccessTokenRef.current = token;
@@ -164,11 +176,14 @@ export function AuthInitializer() {
           const leadMs = 12_000;
           const expMs = payload.exp * 1000;
           const delay = Math.max(expMs - now - leadMs, 0);
-          const base = process.env.NODE_ENV === 'development'
-            ? '/api/v1'
-            : (process.env.NEXT_PUBLIC_BASE_URL || 'https://photer.ltd/api/v1');
+          const base =
+            process.env.NODE_ENV === 'development'
+              ? '/api/v1'
+              : process.env.NEXT_PUBLIC_BASE_URL || 'https://photer.ltd/api/v1';
           refreshTimerRef.current = setTimeout(() => {
-            if (refreshInFlightRef.current) return;
+            if (refreshInFlightRef.current) {
+              return;
+            }
             refreshInFlightRef.current = true;
             fetch(`${base}/auth/refresh-token`, {
               method: 'POST',

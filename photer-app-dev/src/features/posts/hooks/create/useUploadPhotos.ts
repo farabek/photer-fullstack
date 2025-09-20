@@ -4,7 +4,10 @@ import { addPhotos } from '../../model/postSlice';
 import { PhotoSettings } from '../../lib/post.types';
 
 // PhotoData теперь соответствует PhotoSettings, но без опциональных полей
-export type PhotoData = Omit<PhotoSettings, 'originalUrl' | 'filter' | 'cropRatio' | 'croppedWidth' | 'croppedHeight'>;
+export type PhotoData = Omit<
+  PhotoSettings,
+  'originalUrl' | 'filter' | 'cropRatio' | 'croppedWidth' | 'croppedHeight'
+>;
 
 export const MAX_FILE_SIZE_MB = 20;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -37,8 +40,9 @@ export function useUploadPhotos(): {
 
       // Validate file format
       const invalidFormatFiles = Array.from(files).filter(
-        (file) => !file.type.startsWith('image/') ||
-                 (!file.type.includes('jpeg') && !file.type.includes('png'))
+        (file) =>
+          !file.type.startsWith('image/') ||
+          (!file.type.includes('jpeg') && !file.type.includes('png'))
       );
 
       if (oversizedFiles.length > 0 || invalidFormatFiles.length > 0) {
@@ -58,7 +62,7 @@ export function useUploadPhotos(): {
               crop: { x: 0, y: 0 },
               zoom: 1,
               rotation: 0,
-              croppedAreaPixels: null as const,
+              croppedAreaPixels: null,
               naturalAspect: img.naturalWidth / img.naturalHeight,
               originalWidth: img.naturalWidth,
               originalHeight: img.naturalHeight,
@@ -71,7 +75,7 @@ export function useUploadPhotos(): {
               crop: { x: 0, y: 0 },
               zoom: 1,
               rotation: 0,
-              croppedAreaPixels: null as const,
+              croppedAreaPixels: null,
               naturalAspect: 1,
               originalWidth: 100,
               originalHeight: 100,
@@ -92,6 +96,6 @@ export function useUploadPhotos(): {
   return {
     handleFileChange,
     isValidationModalOpen,
-    closeValidationModal
+    closeValidationModal,
   };
 }

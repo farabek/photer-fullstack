@@ -96,6 +96,13 @@ Photer is a full-featured photo-sharing social network built with modern web tec
 - E2e tests for critical user flows
 - Focus on critical paths and error scenarios
 
+### Agent Guidelines
+
+- **Git Operations**: Never commit or push changes to git without explicit user permission
+- **Debug Logging**: Never remove console.log statements or debug code without explicit user permission
+- **User Confirmation**: Always ask for confirmation before making significant changes
+- **Documentation**: Update relevant documentation files before implementing major changes
+
 ## Deployment & Infrastructure
 
 ### Containerization
@@ -117,6 +124,10 @@ Photer is a full-featured photo-sharing social network built with modern web tec
 3. **File Field Names**: Use 'files' in FormData, not 'photos'
 4. **Privacy Headers**: Conditionally send auth headers based on ownership
 5. **Error Logging**: Use errorHandler instead of console.error for consistency
+6. **Git Operations**: Never commit/push without user permission
+7. **Debug Code**: Never remove console.log statements without user permission
+8. **User Confirmation**: Always confirm significant changes with user
+9. **Documentation**: Update docs before major changes
 
 ## Documentation Requirements
 

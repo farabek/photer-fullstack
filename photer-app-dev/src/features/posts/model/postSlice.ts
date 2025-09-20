@@ -12,7 +12,9 @@ const initialState: PostCreationState & PostCachedState = {
   photos: [],
   currentPhotoIndex: 0,
   description: '',
+  tags: [],
   cachedProfilePages: 0,
+  postCreated: false,
 };
 
 const postSlice = createSlice({
@@ -95,11 +97,24 @@ const postSlice = createSlice({
         };
       }
     },
+    setDescription: (state, action: PayloadAction<string>) => {
+      state.description = action.payload;
+    },
+
+    setTags: (state, action: PayloadAction<string[]>) => {
+      state.tags = action.payload;
+    },
+
     resetState: () => initialState,
 
     // указатель закешированных страниц профиля
     cachedProfilePages: (state, action) => {
       state.cachedProfilePages = action.payload;
+    },
+
+    // флаг создания поста для принудительного обновления кэша
+    setPostCreated: (state, action: PayloadAction<boolean>) => {
+      state.postCreated = action.payload;
     },
   },
 });
@@ -111,10 +126,13 @@ export const {
   addPhotos,
   setCroppedImage,
   deletePhoto,
+  setDescription,
+  setTags,
   resetState,
   resetPhotoFilter,
   resetPhotoCrop,
   cachedProfilePages,
+  setPostCreated,
 } = postSlice.actions;
 
 export const postReducer = postSlice.reducer;

@@ -32,12 +32,19 @@ export class PostsService {
       throw new NotFoundException('User not found');
     }
 
+    console.log('🔄 Creating post with:', {
+      description: createPostDto.description,
+      tags: createPostDto.tags,
+      photoUrls,
+      userId,
+    });
+
     const post = await this.prisma.photo.create({
       data: {
         title: 'Post', // Временное название
         description: createPostDto.description || null,
         url: photoUrls.join(','), // Сохраняем URLs через запятую
-        tags: null,
+        tags: createPostDto.tags?.join(',') || null, // Сохраняем теги через запятую
         userId,
       },
       include: {
@@ -313,11 +320,15 @@ export class PostsService {
     // Разбираем URL фотографий (хранятся через запятую)
     const photos = post.url ? post.url.split(',').filter(Boolean) : [];
 
+    // Разбираем теги (хранятся через запятую)
+    const tags = post.tags ? post.tags.split(',').filter(Boolean) : [];
+
     console.log('mapToPostOutputDto:', {
       postId: post.id,
       rawUrl: post.url,
       photosCount: photos.length,
       photos,
+      tags,
     });
 
     // Создаем owner информацию
@@ -332,6 +343,7 @@ export class PostsService {
     return {
       id: post.id,
       description: post.description,
+      tags,
       photos,
       owner,
       status: true, // Все посты публичные по умолчанию

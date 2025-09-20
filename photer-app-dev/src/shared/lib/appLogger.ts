@@ -1,14 +1,14 @@
-export interface LogData {
+export type LogData = {
   [key: string]: any;
-}
+};
 
-export interface LogEntry {
+export type LogEntry = {
   timestamp: string;
   component: string;
   action: string;
   data?: LogData;
   level: 'info' | 'warn' | 'error' | 'debug';
-}
+};
 
 class AppLogger {
   private logs: LogEntry[] = [];
@@ -51,7 +51,9 @@ class AppLogger {
   }
 
   private log(entry: LogEntry) {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {
+      return;
+    }
 
     // Защита от спама: ограничиваем количество одинаковых логов
     const logKey = `${entry.component}_${entry.action}`;

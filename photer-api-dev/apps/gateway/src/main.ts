@@ -3,9 +3,26 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Статическая раздача файлов
+  app.useStaticAssets(join(__dirname, '../../../uploads'), {
+    prefix: '/api/uploads/',
+    setHeaders: (res) => {
+      // Отключаем кэширование для development
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      // CORS заголовки для изображений
+      res.set('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.set('Access-Control-Allow-Methods', 'GET');
+      res.set('Access-Control-Allow-Headers', '*');
+    },
+  });
 
   // Global pipes
   app.useGlobalPipes(

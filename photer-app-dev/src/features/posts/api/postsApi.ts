@@ -12,10 +12,12 @@ export const postsApi = baseApi.injectEndpoints({
       providesTags: ['Posts'],
     }),
 
-    getPost: builder.query<PostType, number>({
+    getPost: builder.query<PostType, string>({
       query: (id) => ({
         url: `/posts/${id}`,
       }),
+      providesTags: (result, error, id) =>
+        result ? [{ type: 'Posts', id }] : [],
       async onQueryStarted(_, { queryFulfilled }) {
         try {
           await queryFulfilled;
@@ -32,45 +34,104 @@ export const postsApi = baseApi.injectEndpoints({
         body: body,
       }),
 
+      invalidatesTags: [{ type: 'Posts', id: 'PROFILE_POSTS_LIST' }],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const response = await queryFulfilled;
-          dispatch(
-            postsApi.util.updateQueryData(
-              'getProfilePosts',
-              { profileId: '', pageNumber: 0 },
-              (draft) => {
-                draft.items.unshift(response.data);
-              }
-            )
-          );
+          // Инвалидируем кэш всех profile posts, чтобы они перезагрузились
+          dispatch(postsApi.util.invalidateTags(['Posts']));
         } catch (e) {
           errorHandler(e);
         }
       },
     }),
 
-    updatePost: builder.mutation<void, { postId: number; description: string }>(
+    updatePost: builder.mutation<void, { postId: string; description: string }>(
       {
-        query: ({ postId, description }) => ({
-          url: `/posts/${postId}`,
-          method: 'PATCH',
-          body: { description },
-        }),
-        invalidatesTags: ['Posts'],
+        query: ({ postId, description }) => {
+          console.log('📤 [API UPDATE POST] Building query', {
+            postId,
+            description,
+            url: `/posts/${postId}`,
+            method: 'PATCH',
+          });
+          return {
+            url: `/posts/${postId}`,
+            method: 'PATCH',
+            body: { description },
+          };
+        },
+        invalidatesTags: (result, error, { postId }) => {
+          console.log('🏷️ [API UPDATE POST] Invalidating tags', {
+            result,
+            error,
+            postId,
+            tags: [
+              { type: 'Posts', id: postId },
+              { type: 'Posts', id: 'PROFILE_POSTS_LIST' },
+              'Posts',
+            ],
+          });
+          return [
+            { type: 'Posts', id: postId }, // Инвалидируем конкретный пост
+            { type: 'Posts', id: 'PROFILE_POSTS_LIST' }, // Инвалидируем список постов профиля
+            'Posts', // Инвалидируем общий тег для всех постов
+          ];
+        },
         // Optimistic update
         async onQueryStarted(
           { postId, description },
           { dispatch, queryFulfilled }
         ) {
+          console.log('🚀 [API UPDATE POST] onQueryStarted called', {
+            postId,
+            description,
+            timestamp: new Date().toISOString(),
+          });
+
+          // Оптимистичное обновление для getPost
+          console.log('⚡ [API UPDATE POST] Applying optimistic update...');
           const patchResult = dispatch(
             postsApi.util.updateQueryData('getPost', postId, (draft) => {
+              console.log('📝 [API UPDATE POST] Updating draft description', {
+                oldDescription: draft.description,
+                newDescription: description,
+                postId: postId,
+              });
               draft.description = description;
             })
           );
+
           try {
-            await queryFulfilled;
+            console.log('⏳ [API UPDATE POST] Waiting for server response...');
+            const queryResult = await queryFulfilled;
+            console.log('✅ [API UPDATE POST] Server response successful', {
+              queryResult,
+              postId,
+              description,
+              timestamp: new Date().toISOString(),
+            });
+
+            // После успешного обновления инвалидируем все связанные кэши
+            console.log('🗂️ [API UPDATE POST] Invalidating cache...');
+            dispatch(
+              postsApi.util.invalidateTags([
+                { type: 'Posts', id: 'PROFILE_POSTS_LIST' },
+                'Posts', // Дополнительная инвалидация общего тега
+              ])
+            );
+
+            console.log('✅ [API UPDATE POST] Cache invalidation completed');
           } catch (e) {
+            console.error(
+              '❌ [API UPDATE POST] Server request failed, undoing optimistic update',
+              {
+                error: e,
+                postId,
+                description,
+                timestamp: new Date().toISOString(),
+              }
+            );
             patchResult.undo();
             errorHandler(e);
           }
@@ -82,10 +143,23 @@ export const postsApi = baseApi.injectEndpoints({
         url: `/posts/${postId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Posts'],
+      invalidatesTags: (result, error, postId) => [
+        { type: 'Posts', id: postId }, // Инвалидируем конкретный пост
+        { type: 'Posts', id: 'PROFILE_POSTS_LIST' }, // Инвалидируем список постов профиля
+        'Posts', // Инвалидируем общий тег для всех постов
+      ],
       async onQueryStarted(postId, { queryFulfilled, dispatch }) {
         try {
           await queryFulfilled;
+          // Дополнительная инвалидация всех связанных кэшей
+          dispatch(
+            postsApi.util.invalidateTags([
+              { type: 'Posts', id: 'PROFILE_POSTS_LIST' },
+              'Posts',
+            ])
+          );
+
+          // Обновление локального кэша getProfilePosts
           dispatch(
             postsApi.util.updateQueryData(
               'getProfilePosts',

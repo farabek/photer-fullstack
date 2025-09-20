@@ -60,7 +60,9 @@ export const AccountManagement = (): ReactNode => {
   };
 
   const handleConfirm = async () => {
-    if (!provider || !plan) return;
+    if (!provider || !plan) {
+      return;
+    }
 
     const subscriptionPeriod =
       plan === 'day' ? 'DAILY' : plan === 'week' ? 'WEEKLY' : 'MONTHLY';

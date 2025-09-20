@@ -22,16 +22,14 @@ export const PublicPostItem = ({ post }: Props): ReactElement => {
       >
         <Carousel className="relative h-full">
           {post.photos.map((photo, index) => (
-            <Image
-              key={index}
-              src={photo}
-              alt="Post image"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-              unoptimized
-              priority={index === 0}
-            />
+            <div key={index} className="relative h-full w-full">
+              <img
+                src={photo}
+                alt="Post image"
+                className="absolute inset-0 h-full w-full object-cover"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
           ))}
         </Carousel>
       </Link>

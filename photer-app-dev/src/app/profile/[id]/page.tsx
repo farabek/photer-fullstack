@@ -16,7 +16,6 @@ export default async function SSRProfilePage({
   let isProfileOwner = false;
   const userId = await getUserId();
 
-
   if (userId) {
     isProfileOwner = userId == profileId ? true : false;
   }

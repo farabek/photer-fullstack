@@ -12,14 +12,12 @@ type Props = {
 export const FileValidationModal = ({
   open,
   onClose,
-  title = "Invalid File",
-  message = "The photo must be less than 20 Mb and have JPEG or PNG format"
+  title = 'Invalid File',
+  message = 'The photo must be less than 20 Mb and have JPEG or PNG format',
 }: Props): ReactNode => {
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm">
-      <p className="mt-[7px] mb-[30px] text-center">
-        {message}
-      </p>
+      <p className="mt-[7px] mb-[30px] text-center">{message}</p>
       <div className="flex justify-center">
         <Button className="w-[120px]" onClick={onClose}>
           OK

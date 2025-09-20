@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
 import { PhotoData } from './useUploadPhotos';
 
-export interface Draft {
+export type Draft = {
   id: string;
   photos: PhotoData[];
   description: string;
   timestamp: Date;
-}
+};
 
 const DRAFTS_STORAGE_KEY = 'photer_drafts';
 const MAX_DRAFTS = 10;
@@ -17,18 +17,24 @@ const MAX_DRAFTS = 10;
  */
 export function useDraftStorage() {
   const [drafts, setDrafts] = useState<Draft[]>(() => {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === 'undefined') {
+      return [];
+    }
 
     try {
       const stored = localStorage.getItem(DRAFTS_STORAGE_KEY);
-      if (!stored) return [];
+      if (!stored) {
+        return [];
+      }
 
       const parsed = JSON.parse(stored);
       // Преобразуем timestamp обратно в Date объекты
-      return parsed.map((draft: Omit<Draft, 'timestamp'> & { timestamp: string }) => ({
-        ...draft,
-        timestamp: new Date(draft.timestamp)
-      }));
+      return parsed.map(
+        (draft: Omit<Draft, 'timestamp'> & { timestamp: string }) => ({
+          ...draft,
+          timestamp: new Date(draft.timestamp),
+        })
+      );
     } catch (error) {
       console.warn('Failed to load drafts from localStorage:', error);
       return [];
@@ -46,10 +52,10 @@ export function useDraftStorage() {
       id: Date.now().toString(),
       photos,
       description,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setDrafts(prevDrafts => {
+    setDrafts((prevDrafts) => {
       const updatedDrafts = [newDraft, ...prevDrafts.slice(0, MAX_DRAFTS - 1)];
 
       try {
@@ -64,14 +70,17 @@ export function useDraftStorage() {
     return newDraft.id;
   }, []);
 
-  const loadDraft = useCallback((draftId: string): Draft | null => {
-    const draft = drafts.find(d => d.id === draftId);
-    return draft || null;
-  }, [drafts]);
+  const loadDraft = useCallback(
+    (draftId: string): Draft | null => {
+      const draft = drafts.find((d) => d.id === draftId);
+      return draft || null;
+    },
+    [drafts]
+  );
 
   const deleteDraft = useCallback((draftId: string) => {
-    setDrafts(prevDrafts => {
-      const updatedDrafts = prevDrafts.filter(d => d.id !== draftId);
+    setDrafts((prevDrafts) => {
+      const updatedDrafts = prevDrafts.filter((d) => d.id !== draftId);
 
       try {
         localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(updatedDrafts));
@@ -97,6 +106,6 @@ export function useDraftStorage() {
     saveDraft,
     loadDraft,
     deleteDraft,
-    clearAllDrafts
+    clearAllDrafts,
   };
 }

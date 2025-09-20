@@ -13,15 +13,15 @@ import { appLogger } from '@/shared/lib/appLogger';
  * - refreshToken: длинный срок жизни (5 мин), используется для обновления accessToken
  * - Оба токена автоматически управляются через cookies
  */
-interface LoginRequest {
+type LoginRequest = {
   email: string;
   password: string;
-}
+};
 
-interface LoginResponse {
+type LoginResponse = {
   accessToken: string; // Возвращается в теле ответа для совместимости
   // Также автоматически устанавливается в cookie backend'ом
-}
+};
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({

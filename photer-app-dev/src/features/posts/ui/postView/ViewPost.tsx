@@ -29,16 +29,23 @@ export const ViewPost = ({
       <div className="flex-1 overflow-y-auto">
         <Carousel className="relative h-full w-full">
           {post.photos.map((photo, index) => (
-            <Image
-              key={index}
-              src={photo}
-              alt="Post image"
-              fill
-              unoptimized
-              priority={index === 0}
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
+            <div key={index} className="relative h-full w-full">
+              <img
+                src={photo}
+                alt="Post image"
+                className="absolute inset-0 h-full w-full object-cover"
+                style={{ width: '100%', height: '100%' }}
+                onError={(e) => {
+                  console.error('Failed to load image:', photo);
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    parent.innerHTML =
+                      '<div class="flex items-center justify-center h-full bg-gray-200 text-gray-500 text-sm">Failed to load image</div>';
+                  }
+                }}
+              />
+            </div>
           ))}
         </Carousel>
       </div>

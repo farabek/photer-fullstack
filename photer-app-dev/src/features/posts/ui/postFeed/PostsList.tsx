@@ -18,13 +18,15 @@ export const PostsList = ({
   ssrPosts,
   postId,
 }: Props): ReactElement => {
-  const { posts, triggerRef, isFetching, hasMore, error, retry } = usePostsList({
-    ssrPosts,
-    profileId,
-  });
+  const { posts, triggerRef, isFetching, hasMore, error, retry } = usePostsList(
+    {
+      ssrPosts,
+      profileId,
+    }
+  );
   const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
-  const { data: fetchedPost } = useGetPostQuery(Number(postId), {
+  const { data: fetchedPost } = useGetPostQuery(postId, {
     skip: !postId || (posts?.items && posts.items.some((p) => p.id === postId)),
   });
 
@@ -43,15 +45,23 @@ export const PostsList = ({
     setSelectedPost(null);
   };
 
+  const handlePostUpdated = (updatedPost: PostType): void => {
+    console.log('🔄 [POSTS LIST] Post updated, updating selected post', {
+      postId: updatedPost.id,
+      oldDescription: selectedPost?.description,
+      newDescription: updatedPost.description,
+      timestamp: new Date().toISOString(),
+    });
+    setSelectedPost(updatedPost);
+  };
+
   return (
     <div className="mt-12 flex flex-col">
       <div className="flex flex-wrap justify-center gap-[12px]">
         {posts?.items &&
         Array.isArray(posts.items) &&
         posts.items.length > 0 ? (
-          posts.items.map((post) => (
-          <PostItem key={post.id} post={post} />
-        ))
+          posts.items.map((post) => <PostItem key={post.id} post={post} />)
         ) : (
           <div className="py-8 text-center">
             <p className="text-lg font-medium text-gray-400">No posts found</p>
@@ -61,10 +71,10 @@ export const PostsList = ({
 
       {error && (
         <div className="col-span-full py-8 text-center">
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="mb-4 text-red-400">{error}</p>
           <button
             onClick={retry}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
             disabled={isFetching}
           >
             {isFetching ? 'Retrying...' : 'Try Again'}
@@ -79,7 +89,11 @@ export const PostsList = ({
         {isFetching ? 'Загрузка...' : hasMore ? 'Прокрути вниз 👇' : 'Конец 🎉'}
       </div>
       {selectedPost && (
-        <PostModal post={selectedPost} onCloseAction={handleCloseModal} />
+        <PostModal
+          post={selectedPost}
+          onCloseAction={handleCloseModal}
+          onPostUpdated={handlePostUpdated}
+        />
       )}
     </div>
   );

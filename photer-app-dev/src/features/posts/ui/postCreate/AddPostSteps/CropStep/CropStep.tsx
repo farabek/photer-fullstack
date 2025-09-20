@@ -26,6 +26,17 @@ export function CropStep({ onCloseAction }: CropStep): React.ReactElement {
   );
   const currentPhoto = photos[currentIndex];
 
+  // Если нет фото - показываем сообщение
+  if (!currentPhoto) {
+    return (
+      <Modal onClose={onCloseAction} open={true}>
+        <div className="flex h-[400px] w-full items-center justify-center bg-gray-200 text-gray-500">
+          No Photo Available - Photos: {photos.length}, Index: {currentIndex}
+        </div>
+      </Modal>
+    );
+  }
+
   const { hasNext, hasPrev, goNext, goPrev } = usePhotoNavigation();
 
   const { onCropComplete, handleCropChange, croppedAreaPixels } =

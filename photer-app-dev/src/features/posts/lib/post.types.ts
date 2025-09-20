@@ -3,6 +3,7 @@ import { PixelCrop } from './aspectRatios';
 export type PostType = {
   id: string;
   description: string;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
   status: boolean;
@@ -48,10 +49,12 @@ export type PostCreationState = {
   photos: PhotoSettings[];
   currentPhotoIndex: number;
   description: string;
+  tags: string[];
   error?: string;
 };
 export type PostCachedState = {
   cachedProfilePages: number;
+  postCreated: boolean;
 };
 
 export type ErrorResponse = {
