@@ -10,14 +10,16 @@
 ### accessToken
 
 - **Тип**: Обычный cookie (не httpOnly)
-- **Срок жизни**: 60 секунд
+- **Срок жизни**: 5 минут (по умолчанию)
+- **Переменная окружения**: `JWT_ACCESS_EXPIRATION_TIME` (дефолт: '5m')
 - **Назначение**: Используется для API запросов
 - **Почему не httpOnly**: JavaScript должен читать токен для добавления в Authorization header
 
 ### refreshToken
 
 - **Тип**: httpOnly cookie
-- **Срок жизни**: 5 минут
+- **Срок жизни**: 7 дней (по умолчанию)
+- **Переменная окружения**: `JWT_REFRESH_EXPIRATION_TIME` (дефолт: '7d')
 - **Назначение**: Используется только для обновления accessToken
 - **Почему httpOnly**: Защищен от XSS атак
 
@@ -48,10 +50,11 @@ headers.set('Authorization', `Bearer ${token}`);
 
 ### Защитные механизмы
 
-1. **Короткий срок жизни accessToken** (60 сек) - даже если украдут, быстро истечет
+1. **Короткий срок жизни accessToken** (5 мин) - даже если украдут, быстро истечет
 2. **Автоматическое обновление** - refreshToken автоматически обновляет accessToken
 3. **secure и sameSite флаги** - защита от перехвата и CSRF атак
 4. **refreshToken в httpOnly** - защищен от XSS атак
+5. **Проактивное обновление** - токен обновляется за 12 секунд до истечения
 
 ### SSR совместимость
 
@@ -79,6 +82,18 @@ GET / auth / me;
 
 ### 3. Обновление токенов
 
+#### Проактивное обновление (AuthInitializer)
+
+```javascript
+// Токен обновляется автоматически за 12 секунд до истечения
+const leadMs = 12_000; // 12 секунд до истечения
+setTimeout(() => {
+  fetch('/auth/refresh-token', { credentials: 'include' });
+}, delay);
+```
+
+#### Реактивное обновление (baseQuery)
+
 ```javascript
 // Если accessToken истек (401)
 POST / auth / refresh - token;
@@ -99,7 +114,8 @@ POST / auth / logout;
 
 ### Frontend
 
-- `src/shared/lib/baseQuery.ts` - Логика автоматического обновления токенов
+- `src/shared/providers/AuthInitializer.tsx` - Проактивное обновление токенов
+- `src/shared/lib/baseQuery.ts` - Реактивное обновление токенов при 401 ошибках
 - `src/shared/lib/cookies.ts` - Утилиты для работы с cookies
 - `src/features/auth/api/authApi.ts` - API endpoints для аутентификации
 

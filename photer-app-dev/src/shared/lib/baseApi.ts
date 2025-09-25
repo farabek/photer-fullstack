@@ -7,7 +7,7 @@ export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: baseQueryWithReauth,
   endpoints: () => ({}),
-  tagTypes: ['me', 'Posts', 'Profile', 'Devices'],
+  tagTypes: ['me', 'Posts', 'Comments', 'Profile', 'Devices'],
   // Глобальные настройки кэширования
   keepUnusedDataFor: 60, // Сохраняем неиспользуемые данные 60 секунд
   refetchOnMountOrArgChange: 30, // Перезапрашиваем данные при монтировании только если прошло 30 секунд

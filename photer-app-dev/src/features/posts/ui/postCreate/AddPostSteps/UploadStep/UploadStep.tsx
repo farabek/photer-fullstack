@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { useUploadPhotos } from '@/features/posts/hooks/create/useUploadPhotos';
-import {
-  useDraftStorage,
-  Draft,
-} from '@/features/posts/hooks/create/useDraftStorage';
+import { useDraftStorage, Draft } from '@/features/posts/hooks/create/useDraftStorage';
 import { Button, IconSprite } from '@/shared/ui';
 import { Card } from '@/widgets/card/card';
 import { Modal } from '@/widgets/modal/Modal';
@@ -18,8 +15,7 @@ export function UploadStep({
   onCloseAction,
   onDraftSelected,
 }: UploadStepProps): React.ReactElement {
-  const { handleFileChange, isValidationModalOpen, closeValidationModal } =
-    useUploadPhotos();
+  const { handleFileChange, isValidationModalOpen, closeValidationModal } = useUploadPhotos();
   const { drafts, deleteDraft } = useDraftStorage();
   const [showDrafts, setShowDrafts] = useState(false);
 
@@ -48,7 +44,7 @@ export function UploadStep({
             drafts.map((draft) => (
               <div
                 key={draft.id}
-                className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
                 onClick={() => handleDraftSelect(draft)}
               >
                 <div className="flex-1">
@@ -56,8 +52,7 @@ export function UploadStep({
                     {draft.description || 'Untitled draft'}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {draft.photos.length} photo
-                    {draft.photos.length !== 1 ? 's' : ''} •
+                    {draft.photos.length} photo{draft.photos.length !== 1 ? 's' : ''} •
                     {draft.timestamp.toLocaleDateString()}
                   </p>
                 </div>
@@ -74,7 +69,7 @@ export function UploadStep({
               </div>
             ))
           )}
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="flex justify-end gap-2 mt-4">
             <Button variant="outlined" onClick={() => setShowDrafts(false)}>
               Cancel
             </Button>

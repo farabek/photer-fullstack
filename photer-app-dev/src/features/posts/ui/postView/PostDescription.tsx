@@ -9,6 +9,15 @@ type Props = {
 
 export const PostDescription = ({ post }: Props): ReactNode => {
   const timeAgo = useTimeAgo(post.createdAt);
+
+  // Debug logging for PostDescription
+  console.log('=== POST DESCRIPTION RENDER ===', {
+    postId: post.id,
+    description: post.description,
+    descriptionLength: post.description?.length || 0,
+    isVirtualPost: post.id.startsWith('virtual-'),
+    timestamp: new Date().toISOString(),
+  });
   return (
     <div className="relative flex gap-[12px]">
       <div className="relative flex h-[36px] min-w-[36px] items-center justify-center overflow-hidden rounded-full object-cover">
@@ -23,7 +32,10 @@ export const PostDescription = ({ post }: Props): ReactNode => {
         />
       </div>
       <div className="flex w-full flex-col">
-        <p className="text-light-100 text-[14px]">
+        <p
+          className="text-light-100 text-[14px]"
+          data-testid="post-description"
+        >
           <span className="mr-1 font-bold">{post.owner.userName}</span>
           {post.description}
         </p>

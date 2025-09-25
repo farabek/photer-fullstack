@@ -1,0 +1,145 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Inctagram" [ref=e5] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e6]:
+          - combobox [ref=e8] [cursor=pointer]:
+            - generic:
+              - generic:
+                - generic:
+                  - img "icon"
+                - generic: English
+            - img [ref=e10] [cursor=pointer]
+          - link "Log In" [ref=e13] [cursor=pointer]:
+            - /url: /sign-in
+          - link "Sign Up" [ref=e15] [cursor=pointer]:
+            - /url: /sign-up
+    - main [ref=e17]:
+      - generic [ref=e18]:
+        - heading "Registered users:" [level=2] [ref=e19]
+        - generic [ref=e20]:
+          - generic [ref=e21]: "0"
+          - generic [ref=e22]: "0"
+          - generic [ref=e23]: "0"
+          - generic [ref=e24]: "0"
+          - generic [ref=e25]: "0"
+          - generic [ref=e26]: "4"
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e31] [cursor=pointer]:
+            - generic [ref=e32] [cursor=pointer]:
+              - group "1 / 2" [ref=e33] [cursor=pointer]:
+                - generic [ref=e34] [cursor=pointer]:
+                  - img "Post image 1 of 2" [ref=e35] [cursor=pointer]
+                  - generic [ref=e36] [cursor=pointer]: 📷 2
+              - group "2 / 2" [ref=e37] [cursor=pointer]:
+                - img "Post image 2 of 2" [ref=e39] [cursor=pointer]
+            - generic [ref=e40] [cursor=pointer]:
+              - button "Previous slide" [disabled] [ref=e41] [cursor=pointer]:
+                - img [ref=e42] [cursor=pointer]
+              - button "Next slide" [ref=e44] [cursor=pointer]:
+                - img [ref=e45] [cursor=pointer]
+            - generic [ref=e48] [cursor=pointer]: 1 / 2
+          - link "icon fara68" [ref=e52] [cursor=pointer]:
+            - /url: /profile/cmfwqntwf0000v3fcpfhx9epq
+            - generic [ref=e53] [cursor=pointer]:
+              - img "icon" [ref=e55] [cursor=pointer]
+              - heading "fara68" [level=3] [ref=e56] [cursor=pointer]
+          - generic [ref=e57]: 11 hours ago
+          - generic [ref=e61]:
+            - generic [ref=e62]: 3-ФОТОф7771111...
+            - button "Show more" [ref=e63] [cursor=pointer]
+        - generic [ref=e64]:
+          - generic [ref=e67] [cursor=pointer]:
+            - generic [ref=e68] [cursor=pointer]:
+              - group "1 / 4" [ref=e69] [cursor=pointer]:
+                - generic [ref=e70] [cursor=pointer]:
+                  - img "Post image 1 of 4" [ref=e71] [cursor=pointer]
+                  - generic [ref=e72] [cursor=pointer]: 📷 4
+              - group "2 / 4" [ref=e73] [cursor=pointer]:
+                - img "Post image 2 of 4" [ref=e75] [cursor=pointer]
+              - group "3 / 4" [ref=e76] [cursor=pointer]:
+                - img "Post image 3 of 4" [ref=e78] [cursor=pointer]
+              - group "4 / 4" [ref=e79] [cursor=pointer]:
+                - img "Post image 4 of 4" [ref=e81] [cursor=pointer]
+            - generic [ref=e82] [cursor=pointer]:
+              - button "Previous slide" [disabled] [ref=e83] [cursor=pointer]:
+                - img [ref=e84] [cursor=pointer]
+              - button "Next slide" [ref=e86] [cursor=pointer]:
+                - img [ref=e87] [cursor=pointer]
+            - generic [ref=e90] [cursor=pointer]: 1 / 4
+          - link "icon john_doe" [ref=e96] [cursor=pointer]:
+            - /url: /profile/cmfwqikdk0001v33stru9a1r3
+            - generic [ref=e97] [cursor=pointer]:
+              - img "icon" [ref=e99] [cursor=pointer]
+              - heading "john_doe" [level=3] [ref=e100] [cursor=pointer]
+          - generic [ref=e101]: 23 hours ago
+          - generic [ref=e105]:
+            - generic [ref=e106]: Small path through the dense forest winding betwee...
+            - button "Show more" [ref=e107] [cursor=pointer]
+        - generic [ref=e108]:
+          - generic [ref=e111] [cursor=pointer]:
+            - generic [ref=e112] [cursor=pointer]:
+              - group "1 / 5" [ref=e113] [cursor=pointer]:
+                - generic [ref=e114] [cursor=pointer]:
+                  - img "Post image 1 of 5" [ref=e115] [cursor=pointer]
+                  - generic [ref=e116] [cursor=pointer]: 📷 5
+              - group "2 / 5" [ref=e117] [cursor=pointer]:
+                - img "Post image 2 of 5" [ref=e119] [cursor=pointer]
+              - group "3 / 5" [ref=e120] [cursor=pointer]:
+                - img "Post image 3 of 5" [ref=e122] [cursor=pointer]
+              - group "4 / 5" [ref=e123] [cursor=pointer]:
+                - img "Post image 4 of 5" [ref=e125] [cursor=pointer]
+              - group "5 / 5" [ref=e126] [cursor=pointer]:
+                - img "Post image 5 of 5" [ref=e128] [cursor=pointer]
+            - generic [ref=e129] [cursor=pointer]:
+              - button "Previous slide" [disabled] [ref=e130] [cursor=pointer]:
+                - img [ref=e131] [cursor=pointer]
+              - button "Next slide" [ref=e133] [cursor=pointer]:
+                - img [ref=e134] [cursor=pointer]
+            - generic [ref=e137] [cursor=pointer]: 1 / 5
+          - link "icon testuser" [ref=e144] [cursor=pointer]:
+            - /url: /profile/cmfwqikcz0000v33ssgwa7ggp
+            - generic [ref=e145] [cursor=pointer]:
+              - img "icon" [ref=e147] [cursor=pointer]
+              - heading "testuser" [level=3] [ref=e148] [cursor=pointer]
+          - generic [ref=e149]: 23 hours ago
+          - generic [ref=e153]:
+            - generic [ref=e154]: Milky Way over the mountains visible in the night ...
+            - button "Show more" [ref=e155] [cursor=pointer]
+        - generic [ref=e156]:
+          - generic [ref=e159] [cursor=pointer]:
+            - generic [ref=e160] [cursor=pointer]:
+              - group "1 / 3" [ref=e161] [cursor=pointer]:
+                - generic [ref=e162] [cursor=pointer]:
+                  - img "Post image 1 of 3" [ref=e163] [cursor=pointer]
+                  - generic [ref=e164] [cursor=pointer]: 📷 3
+              - group "2 / 3" [ref=e165] [cursor=pointer]:
+                - img "Post image 2 of 3" [ref=e167] [cursor=pointer]
+              - group "3 / 3" [ref=e168] [cursor=pointer]:
+                - img "Post image 3 of 3" [ref=e170] [cursor=pointer]
+            - generic [ref=e171] [cursor=pointer]:
+              - button "Previous slide" [disabled] [ref=e172] [cursor=pointer]:
+                - img [ref=e173] [cursor=pointer]
+              - button "Next slide" [ref=e175] [cursor=pointer]:
+                - img [ref=e176] [cursor=pointer]
+            - generic [ref=e179] [cursor=pointer]: 1 / 3
+          - link "icon jane_smith" [ref=e184] [cursor=pointer]:
+            - /url: /profile/cmfwqikdn0002v33sjl3mdx32
+            - generic [ref=e185] [cursor=pointer]:
+              - img "icon" [ref=e187] [cursor=pointer]
+              - heading "jane_smith" [level=3] [ref=e188] [cursor=pointer]
+          - generic [ref=e189]: 23 hours ago
+          - generic [ref=e193]:
+            - generic [ref=e194]: Colorful flowers in the field blooming in spring w...
+            - button "Show more" [ref=e195] [cursor=pointer]
+  - region "Notifications Alt+T"
+  - alert [ref=e196]
+  - button "Open Next.js Dev Tools" [ref=e202] [cursor=pointer]:
+    - img [ref=e203] [cursor=pointer]
+```

@@ -35,9 +35,7 @@ export const Devices = (): ReactNode => {
       }));
 
       // эвристика: первое устройство считаем текущим (пока бэк не отдаёт флаг)
-      if (mapped.length > 0) {
-        mapped[0].isCurrent = true;
-      }
+      if (mapped.length > 0) mapped[0].isCurrent = true;
       setItems(mapped);
     }
   }, [data]);

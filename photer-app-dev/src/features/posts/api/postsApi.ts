@@ -16,8 +16,7 @@ export const postsApi = baseApi.injectEndpoints({
       query: (id) => ({
         url: `/posts/${id}`,
       }),
-      providesTags: (result, error, id) =>
-        result ? [{ type: 'Posts', id }] : [],
+      providesTags: (result, error, id) => [{ type: 'Posts', id }],
       async onQueryStarted(_, { queryFulfilled }) {
         try {
           await queryFulfilled;
@@ -34,7 +33,6 @@ export const postsApi = baseApi.injectEndpoints({
         body: body,
       }),
 
-      invalidatesTags: [{ type: 'Posts', id: 'PROFILE_POSTS_LIST' }],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const response = await queryFulfilled;
@@ -48,91 +46,75 @@ export const postsApi = baseApi.injectEndpoints({
 
     updatePost: builder.mutation<void, { postId: string; description: string }>(
       {
-        query: ({ postId, description }) => {
-          console.log('📤 [API UPDATE POST] Building query', {
-            postId,
-            description,
-            url: `/posts/${postId}`,
-            method: 'PATCH',
-          });
-          return {
-            url: `/posts/${postId}`,
-            method: 'PATCH',
-            body: { description },
-          };
-        },
-        invalidatesTags: (result, error, { postId }) => {
-          console.log('🏷️ [API UPDATE POST] Invalidating tags', {
-            result,
-            error,
-            postId,
-            tags: [
-              { type: 'Posts', id: postId },
-              { type: 'Posts', id: 'PROFILE_POSTS_LIST' },
-              'Posts',
-            ],
-          });
-          return [
-            { type: 'Posts', id: postId }, // Инвалидируем конкретный пост
-            { type: 'Posts', id: 'PROFILE_POSTS_LIST' }, // Инвалидируем список постов профиля
-            'Posts', // Инвалидируем общий тег для всех постов
-          ];
-        },
-        // Optimistic update
+        query: ({ postId, description }) => ({
+          url: `/posts/${postId}`,
+          method: 'PATCH',
+          body: { description },
+        }),
+        invalidatesTags: ['Posts'],
+        // Simple approach: Just invalidate all post caches after successful update
         async onQueryStarted(
           { postId, description },
           { dispatch, queryFulfilled }
         ) {
-          console.log('🚀 [API UPDATE POST] onQueryStarted called', {
+          console.log('=== API REQUEST STARTED ===', {
             postId,
             description,
+            descriptionLength: description?.length || 0,
             timestamp: new Date().toISOString(),
           });
 
-          // Оптимистичное обновление для getPost
-          console.log('⚡ [API UPDATE POST] Applying optimistic update...');
-          const patchResult = dispatch(
-            postsApi.util.updateQueryData('getPost', postId, (draft) => {
-              console.log('📝 [API UPDATE POST] Updating draft description', {
-                oldDescription: draft.description,
-                newDescription: description,
-                postId: postId,
-              });
-              draft.description = description;
-            })
-          );
-
           try {
-            console.log('⏳ [API UPDATE POST] Waiting for server response...');
-            const queryResult = await queryFulfilled;
-            console.log('✅ [API UPDATE POST] Server response successful', {
-              queryResult,
+            const result = await queryFulfilled;
+            console.log('=== API REQUEST SUCCESSFUL ===', {
               postId,
               description,
+              result,
               timestamp: new Date().toISOString(),
             });
 
-            // После успешного обновления инвалидируем все связанные кэши
-            console.log('🗂️ [API UPDATE POST] Invalidating cache...');
+            // Manually update the cache for the specific post
+            console.log('=== CACHE UPDATE STARTED ===', {
+              postId,
+              newDescription: description,
+              timestamp: new Date().toISOString(),
+            });
+
             dispatch(
-              postsApi.util.invalidateTags([
-                { type: 'Posts', id: 'PROFILE_POSTS_LIST' },
-                'Posts', // Дополнительная инвалидация общего тега
-              ])
+              postsApi.util.updateQueryData('getPost', postId, (draft) => {
+                if (draft) {
+                  console.log('=== CACHE BEFORE UPDATE ===', {
+                    postId: draft.id,
+                    oldDescription: draft.description,
+                    oldDescriptionLength: draft.description?.length || 0,
+                    timestamp: new Date().toISOString(),
+                  });
+
+                  draft.description = description;
+                  draft.updatedAt = new Date().toISOString();
+
+                  console.log('=== CACHE AFTER UPDATE ===', {
+                    postId: draft.id,
+                    newDescription: draft.description,
+                    newDescriptionLength: draft.description?.length || 0,
+                    timestamp: new Date().toISOString(),
+                  });
+                }
+              })
             );
 
-            console.log('✅ [API UPDATE POST] Cache invalidation completed');
+            console.log('=== CACHE UPDATE COMPLETED ===', {
+              postId,
+              newDescription: description,
+              timestamp: new Date().toISOString(),
+            });
           } catch (e) {
-            console.error(
-              '❌ [API UPDATE POST] Server request failed, undoing optimistic update',
-              {
-                error: e,
-                postId,
-                description,
-                timestamp: new Date().toISOString(),
-              }
-            );
-            patchResult.undo();
+            console.error('=== API REQUEST FAILED ===', {
+              postId,
+              description,
+              error: e,
+              timestamp: new Date().toISOString(),
+            });
             errorHandler(e);
           }
         },
@@ -143,23 +125,10 @@ export const postsApi = baseApi.injectEndpoints({
         url: `/posts/${postId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, postId) => [
-        { type: 'Posts', id: postId }, // Инвалидируем конкретный пост
-        { type: 'Posts', id: 'PROFILE_POSTS_LIST' }, // Инвалидируем список постов профиля
-        'Posts', // Инвалидируем общий тег для всех постов
-      ],
+      invalidatesTags: ['Posts'],
       async onQueryStarted(postId, { queryFulfilled, dispatch }) {
         try {
           await queryFulfilled;
-          // Дополнительная инвалидация всех связанных кэшей
-          dispatch(
-            postsApi.util.invalidateTags([
-              { type: 'Posts', id: 'PROFILE_POSTS_LIST' },
-              'Posts',
-            ])
-          );
-
-          // Обновление локального кэша getProfilePosts
           dispatch(
             postsApi.util.updateQueryData(
               'getProfilePosts',
@@ -189,7 +158,8 @@ export const postsApi = baseApi.injectEndpoints({
       query: ({ profileId, pageNumber = 1 }) =>
         `/posts/users/${profileId}?pageNumber=${pageNumber}`,
       keepUnusedDataFor: 300,
-      serializeQueryArgs: ({ endpointName }) => `${endpointName}`,
+      serializeQueryArgs: ({ endpointName, queryArgs }) =>
+        `${endpointName}-${queryArgs?.profileId || 'unknown'}`,
       merge: (currentCacheData, responseData) => {
         // Безопасная проверка на существование items
         const currentItems =
@@ -232,8 +202,76 @@ export const postsApi = baseApi.injectEndpoints({
             ]
           : [{ type: 'Posts', id: 'PROFILE_POSTS_LIST' }],
     }),
+
+    addComment: builder.mutation<
+      {
+        id: string;
+        text: string;
+        createdAt: string;
+        owner: { userName: string; avatarUrl: string };
+      },
+      { postId: string; text: string }
+    >({
+      query: ({ postId, text }) => ({
+        url: `/posts/${postId}/comments`,
+        method: 'POST',
+        body: { text },
+      }),
+      invalidatesTags: (result, error, { postId }) => [
+        { type: 'Posts', id: postId },
+        { type: 'Comments', id: postId },
+      ],
+      async onQueryStarted({ postId }, { queryFulfilled, dispatch }) {
+        try {
+          await queryFulfilled;
+          console.log('Comment added successfully for post:', postId);
+        } catch (e) {
+          console.error('Failed to add comment:', e);
+          errorHandler(e);
+        }
+      },
+    }),
+    getPostComments: builder.query<
+      {
+        id: string;
+        text: string;
+        createdAt: string;
+        owner: {
+          userName: string;
+          avatarUrl: string | null;
+        };
+      }[],
+      string
+    >({
+      query: (postId) => ({
+        url: `/posts/${postId}/comments`,
+      }),
+      providesTags: (result, error, postId) => [
+        { type: 'Comments', id: postId },
+      ],
+      async onQueryStarted(postId, { queryFulfilled, dispatch }) {
+        try {
+          await queryFulfilled;
+          console.log('Comments fetched successfully for post:', postId);
+        } catch (e) {
+          console.error('Failed to fetch comments:', e);
+          errorHandler(e);
+        }
+      },
+    }),
   }),
 });
+
+// Типы для комментариев
+export type CommentType = {
+  id: string;
+  text: string;
+  createdAt: string;
+  owner: {
+    userName: string;
+    avatarUrl: string | null;
+  };
+};
 
 export const {
   useGetPostQuery,
@@ -243,4 +281,6 @@ export const {
   useDeletePostMutation,
   useGetProfilePostsQuery,
   useLazyGetProfilePostsQuery,
+  useAddCommentMutation,
+  useGetPostCommentsQuery,
 } = postsApi;

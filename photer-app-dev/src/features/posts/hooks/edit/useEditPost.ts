@@ -1,12 +1,12 @@
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { PostType } from '../../lib/post.types';
-import { useUpdatePostMutation } from '../../api/postsApi';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/shared/state/store';
-import { authApi } from '@/features/auth/api/authApi';
+import { useUpdatePostMutation, postsApi } from '../../api/postsApi';
+import { errorHandler } from '../../lib/errorHandler';
+import { useAppDispatch } from '@/shared/state/store';
 
 type PropsHookEditPost = {
-  onCloseAction: () => void;
+  onReturnToView: () => void; // Changed from onCloseAction to stay on post page
+  onPostUpdated?: (updatedPost: PostType) => void;
   MAX_SYMBOL_COUNT: number;
   post: PostType;
 };
@@ -15,51 +15,75 @@ type HookEditPost = {
   description: string;
   openConfirmClose: boolean;
   editPostRef: RefObject<HTMLDivElement | null>;
-  isUpdating: boolean;
   handleChange: (text: string) => void;
   setOpenConfirmClose: (value: boolean) => void;
   confirmChange: () => void;
   handleAccept: () => void;
   handleUpdatePost: () => Promise<void>;
   handleDecline: () => void;
+  isUpdating: boolean;
+  hasChanges: boolean;
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error';
 };
 
 export function useEditPost({
-  onCloseAction,
+  onReturnToView,
+  onPostUpdated,
   MAX_SYMBOL_COUNT,
   post,
 }: PropsHookEditPost): HookEditPost {
   const [description, setDescription] = useState(post.description);
-  const [originalDescription] = useState(post.description); // Сохраняем оригинальное описание
   const editPostRef = useRef<HTMLDivElement>(null);
   const [openConfirmClose, setOpenConfirmClose] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [updatePost] = useUpdatePostMutation();
+  const [updatePost, { isLoading: isUpdating }] = useUpdatePostMutation();
+  const dispatch = useAppDispatch();
+  const [saveStatus, setSaveStatus] = useState<
+    'idle' | 'saving' | 'saved' | 'error'
+  >('idle');
 
-  // Проверяем состояние аутентификации
-  const userId = useSelector(
-    (state: RootState) => authApi.endpoints.getMe.select()(state).data?.userId
-  );
-  const isAuthenticated = !!userId;
+  // Update description when post changes (e.g., after cache invalidation)
+  useEffect(() => {
+    console.log('=== USE EFFECT - UPDATING DESCRIPTION ===', {
+      postId: post.id,
+      postDescription: post.description,
+      postDescriptionLength: post.description?.length || 0,
+      currentDescription: description,
+      currentDescriptionLength: description?.length || 0,
+      descriptionChanged: post.description !== description,
+      timestamp: new Date().toISOString(),
+    });
+    setDescription(post.description);
+  }, [post.description, post.id]);
+
+  const hasChanges = description !== post.description;
 
   const handleChange = (text: string): void => {
     if (text.length <= MAX_SYMBOL_COUNT) {
+      const oldDescription = description;
+      console.log('=== TEXT INPUT CHANGE ===', {
+        postId: post.id,
+        oldDescription: oldDescription,
+        oldDescriptionLength: oldDescription?.length || 0,
+        newDescription: text,
+        newDescriptionLength: text?.length || 0,
+        hasChanges: text !== post.description,
+        timestamp: new Date().toISOString(),
+      });
       setDescription(text);
     }
   };
 
   const confirmChange = useCallback((): void => {
-    const hasChanges = description !== originalDescription;
     if (!hasChanges) {
-      onCloseAction();
+      onReturnToView();
     } else {
       setOpenConfirmClose(true);
     }
-  }, [description, originalDescription, onCloseAction]);
+  }, [hasChanges, onReturnToView]);
 
   const handleAccept = (): void => {
     setOpenConfirmClose(false);
-    onCloseAction();
+    onReturnToView();
   };
 
   const handleDecline = (): void => {
@@ -67,75 +91,68 @@ export function useEditPost({
   };
 
   const handleUpdatePost = async (): Promise<void> => {
-    if (isUpdating) {
-      return;
-    } // Предотвращаем повторные клики
-
-    console.log('🔄 [UPDATE POST] Starting update process', {
-      postId: post.id,
-      originalDescription: originalDescription,
-      newDescription: description,
-      hasChanges: description !== originalDescription,
-      isAuthenticated,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Проверяем состояние аутентификации
-    if (!isAuthenticated) {
-      console.warn(
-        '⚠️ [UPDATE POST] User not authenticated, cannot update post'
-      );
-      alert('You need to be logged in to update posts.');
-      return;
-    }
-
-    setIsUpdating(true);
     try {
-      console.log('📤 [UPDATE POST] Sending API request...');
+      setSaveStatus('saving');
+      console.log('=== EDIT POST DEBUG - STARTING UPDATE ===', {
+        postId: post.id,
+        originalDescription: post.description,
+        originalDescriptionLength: post.description?.length || 0,
+        newDescription: description,
+        newDescriptionLength: description?.length || 0,
+        hasChanges: description !== post.description,
+        descriptionLength: description?.length || 0,
+        timestamp: new Date().toISOString(),
+      });
+
       const result = await updatePost({
         postId: post.id,
         description,
       }).unwrap();
 
-      console.log('✅ [UPDATE POST] API request successful', {
+      setSaveStatus('saved');
+      console.log('=== EDIT POST DEBUG - UPDATE SUCCESSFUL ===', {
+        postId: post.id,
+        newDescription: description,
         result,
-        postId: post.id,
-        updatedDescription: description,
-        isAuthenticated,
         timestamp: new Date().toISOString(),
       });
 
-      // Показываем уведомление об успешном сохранении
-      alert('Post updated successfully!');
+      // Update local state with the saved description to keep it in sync
+      // Use post.description in case the server returned a slightly different value
+      setDescription(description);
 
-      console.log('🔒 [UPDATE POST] Closing modal...');
-      // После успешного обновления закрываем модал
-      onCloseAction();
+      // Call onPostUpdated callback with updated post data
+      if (onPostUpdated) {
+        const updatedPost: PostType = {
+          ...post,
+          description,
+          updatedAt: new Date().toISOString(), // Assume server updates this
+        };
+        console.log('=== EDIT POST DEBUG - CALLING CALLBACK ===', {
+          updatedPost: {
+            id: updatedPost.id,
+            description: updatedPost.description,
+            descriptionLength: updatedPost.description?.length || 0,
+          },
+        });
+        onPostUpdated(updatedPost);
+      }
 
-      console.log('✅ [UPDATE POST] Update process completed successfully');
-    } catch (error: any) {
-      console.error('❌ [UPDATE POST] Failed to update post:', {
+      console.log('=== EDIT POST DEBUG - RETURNING TO VIEW MODE ===');
+      // Instead of closing the modal, return to view mode
+      // The PostModal will handle this via handleCloseEdit callback
+
+      // Reset save status after showing success for 2 seconds
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      setSaveStatus('error');
+      console.error('=== EDIT POST DEBUG - UPDATE FAILED ===', {
+        postId: post.id,
         error,
-        postId: post.id,
-        description,
-        isAuthenticated,
-        errorData: error?.data,
-        errorMessage: error?.message,
         timestamp: new Date().toISOString(),
       });
-
-      // Показываем более понятное сообщение об ошибке
-      const errorMessage =
-        error?.data?.message ||
-        error?.message ||
-        'Failed to update post. Please try again.';
-
-      alert(errorMessage);
-    } finally {
-      setIsUpdating(false);
-      console.log(
-        '🏁 [UPDATE POST] Finally block executed, isUpdating set to false'
-      );
+      errorHandler(error);
+      // Не закрываем модальное окно при ошибке, чтобы пользователь мог повторить попытку
     }
   };
 
@@ -161,6 +178,7 @@ export function useEditPost({
   return {
     editPostRef,
     description,
+    handleChange,
     openConfirmClose,
     setOpenConfirmClose,
     confirmChange,
@@ -168,6 +186,7 @@ export function useEditPost({
     handleUpdatePost,
     handleDecline,
     isUpdating,
-    handleChange,
+    hasChanges,
+    saveStatus,
   };
 }

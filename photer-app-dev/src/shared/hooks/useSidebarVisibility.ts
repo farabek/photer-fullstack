@@ -47,7 +47,8 @@ export const useSidebarVisibility = () => {
 
   // Проверяем, должен ли показываться Sidebar на текущем маршруте
   const showSidebar = sidebarRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) =>
+      pathname === route || (pathname && pathname.startsWith(`${route}/`))
   );
 
   // Определяем, является ли текущая страница auth страницей

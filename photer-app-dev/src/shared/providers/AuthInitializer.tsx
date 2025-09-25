@@ -69,14 +69,10 @@ export function AuthInitializer() {
     }
 
     const token = getCookie('accessToken');
-    if (!token) {
-      return;
-    }
+    if (!token) return;
 
     const payload = decodeJwt(token);
-    if (!payload?.exp) {
-      return;
-    }
+    if (!payload?.exp) return;
 
     const expMs = payload.exp * 1000; // exp в секундах
     const now = Date.now();
@@ -127,9 +123,7 @@ export function AuthInitializer() {
   useEffect(() => {
     function maybeRefresh() {
       const token = getCookie('accessToken');
-      if (!token) {
-        return;
-      }
+      if (!token) return;
       const payload = decodeJwt(token);
       const now = Date.now();
       const expMs = (payload?.exp ? payload.exp * 1000 : now) - now;
@@ -146,9 +140,7 @@ export function AuthInitializer() {
     }
     window.addEventListener('focus', maybeRefresh);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        maybeRefresh();
-      }
+      if (document.visibilityState === 'visible') maybeRefresh();
     });
     return () => {
       window.removeEventListener('focus', maybeRefresh);
@@ -159,9 +151,7 @@ export function AuthInitializer() {
   useEffect(() => {
     const interval = setInterval(() => {
       const token = getCookie('accessToken');
-      if (!token) {
-        return;
-      }
+      if (!token) return;
       // Если токен изменился (после refresh), пересоздадим основной таймер
       if (lastAccessTokenRef.current !== token) {
         lastAccessTokenRef.current = token;
@@ -181,9 +171,7 @@ export function AuthInitializer() {
               ? '/api/v1'
               : process.env.NEXT_PUBLIC_BASE_URL || 'https://photer.ltd/api/v1';
           refreshTimerRef.current = setTimeout(() => {
-            if (refreshInFlightRef.current) {
-              return;
-            }
+            if (refreshInFlightRef.current) return;
             refreshInFlightRef.current = true;
             fetch(`${base}/auth/refresh-token`, {
               method: 'POST',

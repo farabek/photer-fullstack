@@ -2,7 +2,7 @@ import { Button } from '@/shared/ui/button/Button';
 import { Modal } from '@/widgets/modal/Modal';
 import { ReactNode } from 'react';
 
-export type ConfirmModalConfig = {
+export interface ConfirmModalConfig {
   title: string;
   message: string;
   confirmText: string;
@@ -10,14 +10,17 @@ export type ConfirmModalConfig = {
   onConfirm: () => void;
   onCancel: () => void;
   variant?: 'danger' | 'warning' | 'info';
-};
+}
 
 type Props = {
   open: boolean;
   config: ConfirmModalConfig;
 };
 
-export const ConfirmModal = ({ open, config }: Props): ReactNode => {
+export const ConfirmModal = ({
+  open,
+  config,
+}: Props): ReactNode => {
   const {
     title,
     message,
@@ -25,7 +28,7 @@ export const ConfirmModal = ({ open, config }: Props): ReactNode => {
     cancelText,
     onConfirm,
     onCancel,
-    variant = 'info',
+    variant = 'info'
   } = config;
 
   const getButtonVariant = () => {
@@ -41,9 +44,15 @@ export const ConfirmModal = ({ open, config }: Props): ReactNode => {
 
   return (
     <Modal open={open} onClose={onCancel} title={title} size="sm">
-      <p className="mt-[7px] mb-[30px] text-center">{message}</p>
+      <p className="mt-[7px] mb-[30px] text-center">
+        {message}
+      </p>
       <div className="flex justify-center gap-[24px]">
-        <Button variant="outlined" className="w-[96px]" onClick={onCancel}>
+        <Button
+          variant="outlined"
+          className="w-[96px]"
+          onClick={onCancel}
+        >
           {cancelText}
         </Button>
         <Button

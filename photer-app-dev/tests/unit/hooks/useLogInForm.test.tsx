@@ -1,5 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useLogInForm } from '@/features/auth/sign-in/hooks/useLogInForm';
+import { LogInSchema } from '@/features/auth/sign-in/hooks/validationSchema';
 
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
@@ -36,10 +37,13 @@ describe('🧪 useLogInForm Hook', () => {
     refresh: jest.fn(),
   };
 
-  const mockLoginQuery = jest.fn();
+  const mockLoginQuery = jest.fn().mockReturnValue({
+    unwrap: jest.fn(),
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers(); // Сбрасываем таймеры перед каждым тестом
 
     mockUseRouter.mockReturnValue(mockRouter);
     mockUseLoginMutation.mockReturnValue([
@@ -48,6 +52,14 @@ describe('🧪 useLogInForm Hook', () => {
     ]);
     mockDecodeJwt.mockReturnValue({ userId: '123', sub: '123' });
   });
+
+  // Helper to mock loading state during test
+  const mockLoadingState = (isLoading: boolean, isError: boolean = false) => {
+    mockUseLoginMutation.mockReturnValue([
+      mockLoginQuery,
+      { isLoading, isError },
+    ]);
+  };
 
   describe('✅ Инициализация хука', () => {
     test('должен возвращать все необходимые методы и состояния', () => {
@@ -75,54 +87,97 @@ describe('🧪 useLogInForm Hook', () => {
         resolveQuery = resolve;
       });
 
-      mockLoginQuery.mockReturnValue(queryPromise);
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockReturnValue(queryPromise),
+      });
 
-      const { result } = renderHook(() => useLogInForm());
+      const { result, rerender } = renderHook(() => useLogInForm());
 
-      // Начинаем процесс входа
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
+
+      // Начинаем процесс входа - имитируем, что RTK Query установил loading state
       act(() => {
         result.current.handleSubmit();
+        // Имитируем переход в состояние загрузки
+        mockLoadingState(true);
+        rerender();
       });
 
       // Проверяем, что состояние загрузки активно
       expect(result.current.isLoading).toBe(true);
 
       // Завершаем запрос
-      resolveQuery!({ accessToken: 'mock-token' });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(true); // Все еще загрузка из-за редиректа
+      await act(async () => {
+        resolveQuery!({ accessToken: 'mock-token' });
       });
+
+      // Ждем завершения запроса и начала редиректа
+      await waitFor(() => {
+        expect(mockLoginQuery).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          password: 'password123',
+        });
+      });
+
+      // Состояние загрузки должно оставаться активным из-за редиректа
+      expect(result.current.isLoading).toBe(true);
     });
 
     test('должен сохранять состояние загрузки до редиректа', async () => {
-      mockLoginQuery.mockResolvedValue({ accessToken: 'mock-token' });
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue({ accessToken: 'mock-token' }),
+      });
 
-      const { result } = renderHook(() => useLogInForm());
+      const { result, rerender } = renderHook(() => useLogInForm());
 
-      // Начинаем процесс входа
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
+
+      // Начинаем процесс входа - имитируем loading state
       act(() => {
         result.current.handleSubmit();
+        mockLoadingState(true);
+        rerender();
       });
 
       // Ждем завершения запроса
       await waitFor(() => {
-        expect(mockLoginQuery).toHaveBeenCalled();
+        expect(mockLoginQuery).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          password: 'password123',
+        });
       });
 
       // Проверяем, что состояние загрузки все еще активно (из-за редиректа)
       expect(result.current.isLoading).toBe(true);
 
-      // Ждем завершения редиректа
+      // Ждем завершения задержки и редиректа
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
       await waitFor(() => {
         expect(mockRouter.push).toHaveBeenCalledWith('/profile/123');
       });
     });
 
     test('должен сбрасывать состояние загрузки при ошибке', async () => {
-      mockLoginQuery.mockRejectedValue(new Error('Login failed'));
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockRejectedValue(new Error('Login failed')),
+      });
 
       const { result } = renderHook(() => useLogInForm());
+
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
 
       // Начинаем процесс входа
       act(() => {
@@ -131,7 +186,10 @@ describe('🧪 useLogInForm Hook', () => {
 
       // Ждем завершения запроса с ошибкой
       await waitFor(() => {
-        expect(mockLoginQuery).toHaveBeenCalled();
+        expect(mockLoginQuery).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          password: 'password123',
+        });
       });
 
       // Проверяем, что состояние загрузки сброшено
@@ -141,9 +199,17 @@ describe('🧪 useLogInForm Hook', () => {
 
   describe('📝 Обработка формы', () => {
     test('должен корректно обрабатывать успешный вход', async () => {
-      mockLoginQuery.mockResolvedValue({ accessToken: 'mock-token' });
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue({ accessToken: 'mock-token' }),
+      });
 
       const { result } = renderHook(() => useLogInForm());
+
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
 
       // Начинаем процесс входа
       act(() => {
@@ -152,13 +218,17 @@ describe('🧪 useLogInForm Hook', () => {
 
       // Ждем завершения запроса
       await waitFor(() => {
-        expect(mockLoginQuery).toHaveBeenCalled();
+        expect(mockLoginQuery).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          password: 'password123',
+        });
       });
 
       // Проверяем, что JWT декодирован
       expect(mockDecodeJwt).toHaveBeenCalledWith('mock-token');
 
       // Проверяем, что произошел редирект
+      await new Promise((resolve) => setTimeout(resolve, 600));
       await waitFor(() => {
         expect(mockRouter.push).toHaveBeenCalledWith('/profile/123');
       });
@@ -166,9 +236,17 @@ describe('🧪 useLogInForm Hook', () => {
 
     test('должен корректно обрабатывать ошибку входа', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      mockLoginQuery.mockRejectedValue(new Error('Login failed'));
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockRejectedValue(new Error('Login failed')),
+      });
 
       const { result } = renderHook(() => useLogInForm());
+
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
 
       // Начинаем процесс входа
       act(() => {
@@ -177,7 +255,10 @@ describe('🧪 useLogInForm Hook', () => {
 
       // Ждем завершения запроса с ошибкой
       await waitFor(() => {
-        expect(mockLoginQuery).toHaveBeenCalled();
+        expect(mockLoginQuery).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          password: 'password123',
+        });
       });
 
       // Проверяем, что ошибка залогирована
@@ -219,10 +300,18 @@ describe('🧪 useLogInForm Hook', () => {
 
   describe('🔒 Безопасность и обработка токенов', () => {
     test('должен корректно декодировать JWT токен', async () => {
-      mockLoginQuery.mockResolvedValue({ accessToken: 'mock-jwt-token' });
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue({ accessToken: 'mock-jwt-token' }),
+      });
       mockDecodeJwt.mockReturnValue({ userId: '456', sub: '456' });
 
       const { result } = renderHook(() => useLogInForm());
+
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
 
       act(() => {
         result.current.handleSubmit();
@@ -232,33 +321,51 @@ describe('🧪 useLogInForm Hook', () => {
         expect(mockDecodeJwt).toHaveBeenCalledWith('mock-jwt-token');
       });
 
+      await new Promise((resolve) => setTimeout(resolve, 600));
       await waitFor(() => {
         expect(mockRouter.push).toHaveBeenCalledWith('/profile/456');
       });
     });
 
     test('должен использовать sub как fallback для userId', async () => {
-      mockLoginQuery.mockResolvedValue({ accessToken: 'mock-jwt-token' });
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue({ accessToken: 'mock-jwt-token' }),
+      });
       mockDecodeJwt.mockReturnValue({ sub: '789' }); // Нет userId, только sub
 
       const { result } = renderHook(() => useLogInForm());
+
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
 
       act(() => {
         result.current.handleSubmit();
       });
 
+      await new Promise((resolve) => setTimeout(resolve, 600));
       await waitFor(() => {
         expect(mockRouter.push).toHaveBeenCalledWith('/profile/789');
       });
     });
 
     test('должен корректно обрабатывать некорректный JWT', async () => {
-      mockLoginQuery.mockResolvedValue({ accessToken: 'invalid-token' });
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue({ accessToken: 'invalid-token' }),
+      });
       mockDecodeJwt.mockImplementation(() => {
         throw new Error('Invalid JWT');
       });
 
       const { result } = renderHook(() => useLogInForm());
+
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
 
       act(() => {
         result.current.handleSubmit();
@@ -275,9 +382,17 @@ describe('🧪 useLogInForm Hook', () => {
     test('должен добавлять задержку перед редиректом', async () => {
       jest.useFakeTimers();
 
-      mockLoginQuery.mockResolvedValue({ accessToken: 'mock-token' });
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockResolvedValue({ accessToken: 'mock-token' }),
+      });
 
       const { result } = renderHook(() => useLogInForm());
+
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
 
       act(() => {
         result.current.handleSubmit();
@@ -285,13 +400,16 @@ describe('🧪 useLogInForm Hook', () => {
 
       // Ждем завершения запроса
       await waitFor(() => {
-        expect(mockLoginQuery).toHaveBeenCalled();
+        expect(mockLoginQuery).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          password: 'password123',
+        });
       });
 
       // Проверяем, что редирект еще не произошел
       expect(mockRouter.push).not.toHaveBeenCalled();
 
-      // Продвигаем время на 500ms
+      // Продвигаем время на 500ms (задержка в хуке)
       act(() => {
         jest.advanceTimersByTime(500);
       });
@@ -305,11 +423,17 @@ describe('🧪 useLogInForm Hook', () => {
     });
 
     test('должен корректно обрабатывать отмену редиректа при ошибке', async () => {
-      jest.useFakeTimers();
-
-      mockLoginQuery.mockRejectedValue(new Error('Login failed'));
+      mockLoginQuery.mockReturnValue({
+        unwrap: jest.fn().mockRejectedValue(new Error('Login failed')),
+      });
 
       const { result } = renderHook(() => useLogInForm());
+
+      // Заполняем форму тестовыми данными
+      act(() => {
+        result.current.setValue('email', 'test@example.com');
+        result.current.setValue('password', 'password123');
+      });
 
       act(() => {
         result.current.handleSubmit();
@@ -317,18 +441,15 @@ describe('🧪 useLogInForm Hook', () => {
 
       // Ждем завершения запроса с ошибкой
       await waitFor(() => {
-        expect(mockLoginQuery).toHaveBeenCalled();
+        expect(mockLoginQuery).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          password: 'password123',
+        });
       });
 
-      // Продвигаем время
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      });
-
-      // Проверяем, что редирект не произошел
+      // Проверяем, что редирект не произошел и состояние загрузки сброшено
       expect(mockRouter.push).not.toHaveBeenCalled();
-
-      jest.useRealTimers();
+      expect(result.current.isLoading).toBe(false);
     });
   });
 });

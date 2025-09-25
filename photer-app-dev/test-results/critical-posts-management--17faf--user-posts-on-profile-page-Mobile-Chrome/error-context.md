@@ -1,0 +1,54 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Inctagram" [ref=e5] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e6]:
+          - combobox [ref=e8] [cursor=pointer]:
+            - generic:
+              - generic:
+                - generic:
+                  - img "icon"
+            - img [ref=e10] [cursor=pointer]
+          - link "Log In" [ref=e13] [cursor=pointer]:
+            - /url: /sign-in
+          - link "Sign Up" [ref=e15] [cursor=pointer]:
+            - /url: /sign-up
+    - generic [ref=e19]:
+      - heading "Sign In" [level=1] [ref=e20]
+      - generic [ref=e21]:
+        - link [ref=e22] [cursor=pointer]:
+          - /url: http://localhost:3001/api/v1/auth/oauth/google/login
+          - img [ref=e23] [cursor=pointer]
+        - link [ref=e25] [cursor=pointer]:
+          - /url: http://localhost:3001/api/v1/auth/oauth/github/login
+          - img [ref=e26] [cursor=pointer]
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]: Email
+            - textbox "Email" [ref=e32]
+          - generic [ref=e33]:
+            - generic [ref=e34]: Password
+            - textbox "Password" [ref=e35]
+            - button [ref=e36]:
+              - img [ref=e37]
+          - generic [ref=e39]:
+            - link "Forgot Password" [ref=e40] [cursor=pointer]:
+              - /url: /forgot-password
+            - link "Resend Confirmation" [ref=e41] [cursor=pointer]:
+              - /url: /resend-link
+          - button "Sign In" [disabled] [ref=e42]:
+            - generic [ref=e43]: Sign In
+        - paragraph [ref=e44]: Don’t have an account?
+        - link "Sign Up" [ref=e45] [cursor=pointer]:
+          - /url: /sign-up
+  - region "Notifications Alt+T"
+  - alert [ref=e46]
+  - button "Open Next.js Dev Tools" [ref=e52] [cursor=pointer]:
+    - img [ref=e53] [cursor=pointer]
+```

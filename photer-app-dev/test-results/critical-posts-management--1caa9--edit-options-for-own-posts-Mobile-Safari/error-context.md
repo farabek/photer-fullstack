@@ -1,0 +1,51 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - 'heading "Application error: a client-side exception has occurred while loading localhost (see the browser console for more information)." [level=2] [ref=e4]'
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - navigation [ref=e10]:
+          - button "previous" [disabled] [ref=e11]:
+            - img "previous" [ref=e12]
+          - generic [ref=e14]:
+            - generic [ref=e15]: 1/
+            - generic [ref=e16]: "1"
+          - button "next" [disabled] [ref=e17]:
+            - img "next" [ref=e18]
+        - img
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - img [ref=e22]
+          - generic "No Next.js version data was found." [ref=e24]: Next.js 0.0.0 (unknown)
+          - generic [ref=e25]: Webpack
+        - img
+    - generic [ref=e26]:
+      - dialog "Runtime Error":
+        - generic [ref=e27]:
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - generic [ref=e32]: Runtime Error
+              - generic [ref=e33]:
+                - button "Copy Stack Trace" [ref=e34] [cursor=pointer]:
+                  - img [ref=e35] [cursor=pointer]
+                - button "No related documentation found" [disabled] [ref=e37]:
+                  - img [ref=e38]
+                - link "Learn more about enabling Node.js inspector for server code with Chrome DevTools" [ref=e40]:
+                  - /url: https://nextjs.org/docs/app/building-your-application/configuring/debugging#server-side-code
+                  - img [ref=e41]
+            - paragraph [ref=e53]: "ChunkLoadError: Loading chunk app/layout failed. (error: http://localhost:3000/_next/static/chunks/app/layout.js)"
+          - generic [ref=e55]:
+            - generic [ref=e56]: "1"
+            - generic [ref=e57]: "2"
+      - contentinfo [ref=e58]:
+        - region "Error feedback" [ref=e59]:
+          - paragraph [ref=e60]:
+            - link "Was this helpful?" [ref=e61]:
+              - /url: https://nextjs.org/telemetry#error-feedback
+          - button "Mark as helpful" [ref=e62] [cursor=pointer]:
+            - img [ref=e63] [cursor=pointer]
+          - button "Mark as not helpful" [ref=e66] [cursor=pointer]:
+            - img [ref=e67] [cursor=pointer]
+```

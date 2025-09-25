@@ -22,10 +22,13 @@ async function getUsersCount(): Promise<number> {
   }
 }
 
+// Настройка: брать первое или последнее фото из поста
+const PHOTO_SELECTION_MODE = 'last'; // 'first' или 'last'
+
 async function getPosts(): Promise<Posts> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/posts?pageNumber=1&pageSize=8&sortDirection=desc&sortBy=createdAt`
+      `${process.env.NEXT_PUBLIC_BASE_URL}/posts?pageNumber=1&pageSize=50&sortDirection=desc&sortBy=createdAt`
     );
     if (!res.ok) {
       throw new Error(`Failed to fetch posts: ${res.status} ${res.statusText}`);
@@ -50,8 +53,127 @@ export default async function HomePage(): Promise<ReactElement> {
 
   const usersCount =
     usersCountResult.status === 'fulfilled' ? usersCountResult.value : 0;
-  const posts =
+  const allPosts =
     postsResult.status === 'fulfilled' ? postsResult.value.items : [];
+
+  // Группируем посты по пользователям и берем фото из КАЖДОГО поста согласно настройке
+  const userPhotos = new Map();
+  allPosts.forEach((post) => {
+    const userId = post.owner?.userId;
+    const userName = post.owner?.userName;
+
+    const selectedPhotoIndex =
+      PHOTO_SELECTION_MODE === 'last' ? (post.photos?.length || 1) - 1 : 0;
+    const selectedPhoto = post.photos?.[selectedPhotoIndex];
+
+    console.log('=== PROCESSING POST ===', {
+      postId: post.id,
+      userId,
+      userName,
+      postPhotosCount: post.photos?.length || 0,
+      photoSelectionMode: PHOTO_SELECTION_MODE,
+      selectedPhotoIndex,
+      selectedPhoto,
+    });
+
+    if (userId && post.photos && post.photos.length > 0) {
+      if (!userPhotos.has(userId)) {
+        userPhotos.set(userId, {
+          userId,
+          userName,
+          photos: [],
+          posts: [],
+          latestPostId: post.id,
+          latestCreatedAt: post.createdAt,
+        });
+        console.log('=== CREATED USER ENTRY ===', { userId, userName });
+      }
+
+      // Добавляем фото из поста согласно настройке
+      const userData = userPhotos.get(userId);
+      const beforeCount = userData.photos.length;
+      const photoIndex =
+        PHOTO_SELECTION_MODE === 'last' ? post.photos.length - 1 : 0;
+      const photoToAdd = post.photos[photoIndex];
+      userData.photos.push(photoToAdd);
+
+      // Сохраняем ссылку на пост для получения описания
+      if (!userData.posts.some((p) => p.id === post.id)) {
+        userData.posts.push(post);
+      }
+
+      console.log(
+        `=== ADDED ${PHOTO_SELECTION_MODE.toUpperCase()} PHOTO TO USER ===`,
+        {
+          userId,
+          userName,
+          postId: post.id,
+          photoIndex,
+          addedPhoto: photoToAdd,
+          totalBefore: beforeCount,
+          totalAfter: userData.photos.length,
+        }
+      );
+
+      // Обновляем самый свежий пост если нужно
+      if (new Date(post.createdAt) > new Date(userData.latestCreatedAt)) {
+        userData.latestPostId = post.id;
+        userData.latestCreatedAt = post.createdAt;
+      }
+    } else {
+      console.log('=== SKIPPED POST ===', {
+        postId: post.id,
+        userId,
+        hasPhotos: !!(post.photos && post.photos.length > 0),
+        reason: 'missing userId or no photos',
+      });
+    }
+  });
+
+  // Преобразуем в формат постов для отображения
+  // Создаем виртуальный пост с id пользователя для модального окна
+  const posts = Array.from(userPhotos.values()).map((userData) => {
+    // Используем описание последнего поста или общее описание
+    const sortedPosts = userData.posts.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const lastPostDescription =
+      sortedPosts.length > 0
+        ? sortedPosts[0].description
+        : `Фото пользователя ${userData.userName}`;
+
+    return {
+      id: `virtual-${userData.userId}`, // Уникальный id для виртуального поста
+      description: lastPostDescription, // Используем описание последнего поста
+      tags: [],
+      createdAt: userData.latestCreatedAt,
+      updatedAt: userData.latestCreatedAt,
+      status: true,
+      photos: userData.photos,
+      owner: {
+        userId: userData.userId,
+        userName: userData.userName,
+        avatarUrl: null,
+        firstName: null,
+        lastName: null,
+      },
+    };
+  });
+
+  console.log('=== HOME PAGE DEBUG ===', {
+    totalPosts: allPosts.length,
+    uniqueUsers: userPhotos.size,
+    finalPostsCount: posts.length,
+    usersWithPosts: Array.from(userPhotos.entries()).map(([userId, data]) => ({
+      userId,
+      userName: data.userName,
+      totalPhotos: data.photos.length,
+      postsProcessed: allPosts.filter((p) => p.owner?.userId === userId).length,
+    })),
+    postsWithMultiplePhotos: posts.filter((p) => p.photos?.length > 1).length,
+    timestamp: new Date().toISOString(),
+  });
 
   const errors: string[] = [
     usersCountResult.status === 'rejected'

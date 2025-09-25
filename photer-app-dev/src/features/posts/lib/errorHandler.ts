@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify';
 
 // This interface represents the typical error structure from RTK Query.
-type CustomErrorResponse = {
+interface CustomErrorResponse {
   status?: number;
   data?: {
     message?: string;
@@ -9,7 +9,7 @@ type CustomErrorResponse = {
   };
   error?: string;
   message?: string;
-};
+}
 
 export const errorHandler = (err: unknown): void => {
   const error = err as CustomErrorResponse;

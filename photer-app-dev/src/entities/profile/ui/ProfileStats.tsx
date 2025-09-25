@@ -12,6 +12,17 @@ export const ProfileStats = ({
   followers,
   publications,
 }: Props): ReactElement => {
+  // Логи для диагностики счетчиков
+  console.log('=== PROFILE STATS DEBUG ===', {
+    following,
+    followers,
+    publications,
+    followingType: typeof following,
+    followersType: typeof followers,
+    publicationsType: typeof publications,
+    timestamp: new Date().toISOString(),
+  });
+
   return (
     <div className={'flex gap-25'}>
       <span className={'regular-text-14'}>

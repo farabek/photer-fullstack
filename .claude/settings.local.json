@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pkill:*)"
+      "Bash(netstat:*)",
+      "Bash(ss:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(npm run start:dev:*)",
+      "Bash(npm run:*)",
+      "Bash(start http://localhost:3000)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm test:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm quality:check:*)",
+      "Bash(pnpm lint:md:fix:*)",
+      "Bash(npx markdownlint:*)"
     ],
     "deny": [],
     "ask": []

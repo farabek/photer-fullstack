@@ -1,0 +1,48 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Inctagram" [ref=e5] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e6]:
+          - combobox [ref=e8] [cursor=pointer]:
+            - generic:
+              - generic:
+                - generic:
+                  - img "icon"
+                - generic: English
+            - img [ref=e10] [cursor=pointer]
+          - link "Log In" [ref=e13] [cursor=pointer]:
+            - /url: /sign-in
+          - link "Sign Up" [ref=e15] [cursor=pointer]:
+            - /url: /sign-up
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - img "avatar" [ref=e21]
+        - generic [ref=e22]:
+          - heading "cmfovo66m0000v39816a2gwg7" [level=2] [ref=e25]
+          - generic [ref=e26]:
+            - generic [ref=e27]:
+              - strong [ref=e28]: "0"
+              - text: Following
+            - generic [ref=e29]:
+              - strong [ref=e30]: "0"
+              - text: Followers
+            - generic [ref=e31]:
+              - strong [ref=e32]: "0"
+              - text: Publications
+          - paragraph [ref=e34]:
+            - text: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+            - link "laboris nisi ut aliquip ex ea commodo consequat." [ref=e35] [cursor=pointer]:
+              - /url: "#"
+      - generic [ref=e36]:
+        - paragraph [ref=e39]: No posts found
+        - generic [ref=e40]: Конец 🎉
+  - region "Notifications Alt+T"
+  - alert [ref=e41]
+  - button "Open Next.js Dev Tools" [ref=e47] [cursor=pointer]:
+    - img [ref=e48] [cursor=pointer]
+```

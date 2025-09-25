@@ -139,39 +139,42 @@ export const baseQueryWithReauth: BaseQueryFn<
             timestamp: new Date().toISOString(),
           });
         } else {
-          console.log('❌ Token refresh failed (no data), clearing cookies:', {
-            refreshError: refreshResult.error,
-            hasAccessTokenBefore: !!getCookie('accessToken'),
-            hasRefreshTokenBefore: !!getCookie('refreshToken'),
-            timestamp: new Date().toISOString(),
-          });
+          console.log(
+            '❌ Token refresh failed (no data), marking session as expired:',
+            {
+              refreshError: refreshResult.error,
+              hasAccessTokenBefore: !!getCookie('accessToken'),
+              hasRefreshTokenBefore: !!getCookie('refreshToken'),
+              timestamp: new Date().toISOString(),
+            }
+          );
           // Не удалось обновить токены (refreshToken истек или недействителен)
-          deleteCookie('accessToken');
-          deleteCookie('refreshToken');
-          console.log('🧹 Cookies cleared, dispatching invalidateTags');
+          // НЕ очищаем cookies автоматически - пользователь должен сам выйти
+          console.log(
+            '🔔 Session expired, dispatching invalidateTags and sessionExpired (keeping cookies)'
+          );
           api.dispatch({
             type: 'baseApi/invalidateTags',
             payload: ['me'],
           });
-          // 🆕 [UPDATE 1]: уведомление + редирект (только если не идет refresh)
-          if (typeof window !== 'undefined' && !mutex.isLocked()) {
-            alert('Сессия истекла, войдите снова');
-            window.location.href = '/sign-in';
-          }
+          api.dispatch({
+            type: 'auth/setSessionExpired',
+            payload: true,
+          });
+          // НЕ делаем автоматический редирект - пользователь увидит "Сессия истекла"
         }
 
-        // 🆕 [UPDATE 2]: проверка на refresh 401 → выходим из цикла
+        // 🆕 [UPDATE 2]: проверка на refresh 401 → помечаем сессию как истекшую
         if (refreshResult.error && refreshResult.error.status === 401) {
-          console.log('⛔ Refresh token expired → force logout');
-          deleteCookie('accessToken');
-          deleteCookie('refreshToken');
+          console.log('⛔ Refresh token expired → marking session as expired');
+          // НЕ очищаем cookies - пользователь должен сам выйти
           api.dispatch({ type: 'baseApi/invalidateTags', payload: ['me'] });
+          api.dispatch({
+            type: 'auth/setSessionExpired',
+            payload: true,
+          });
 
-          // 🆕 [UPDATE 3]: уведомление + редирект
-          if (typeof window !== 'undefined') {
-            alert('Сессия истекла, войдите снова');
-            window.location.href = '/sign-in';
-          }
+          // НЕ делаем автоматический редирект - пользователь увидит "Сессия истекла"
 
           return { error: refreshResult.error };
         }

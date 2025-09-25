@@ -20,6 +20,7 @@ export const EllipsisMenu = ({ menuItems }: Props): ReactNode => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="cursor-pointer outline-none"
+        data-testid="post-menu"
       >
         <IconSprite iconName="more-horizontal" />
       </button>

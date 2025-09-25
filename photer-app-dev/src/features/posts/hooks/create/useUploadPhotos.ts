@@ -4,10 +4,7 @@ import { addPhotos } from '../../model/postSlice';
 import { PhotoSettings } from '../../lib/post.types';
 
 // PhotoData теперь соответствует PhotoSettings, но без опциональных полей
-export type PhotoData = Omit<
-  PhotoSettings,
-  'originalUrl' | 'filter' | 'cropRatio' | 'croppedWidth' | 'croppedHeight'
->;
+export type PhotoData = Omit<PhotoSettings, 'originalUrl' | 'filter' | 'cropRatio' | 'croppedWidth' | 'croppedHeight'>;
 
 export const MAX_FILE_SIZE_MB = 20;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -40,9 +37,8 @@ export function useUploadPhotos(): {
 
       // Validate file format
       const invalidFormatFiles = Array.from(files).filter(
-        (file) =>
-          !file.type.startsWith('image/') ||
-          (!file.type.includes('jpeg') && !file.type.includes('png'))
+        (file) => !file.type.startsWith('image/') ||
+                 (!file.type.includes('jpeg') && !file.type.includes('png'))
       );
 
       if (oversizedFiles.length > 0 || invalidFormatFiles.length > 0) {
@@ -96,6 +92,6 @@ export function useUploadPhotos(): {
   return {
     handleFileChange,
     isValidationModalOpen,
-    closeValidationModal,
+    closeValidationModal
   };
 }

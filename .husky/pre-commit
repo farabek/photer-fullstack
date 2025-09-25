@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Переходим в директорию фронтенда
+cd photer-app-dev
+
+# Запускаем качественные unit тесты
+echo "🧪 Running high-quality unit tests..."
+npm test -- --testPathPatterns="Carousel\.test\.tsx|PostItem\.test\.tsx|LogIn\.test\.tsx|ConditionalSidebarWrapper\.test\.tsx" --watchAll=false --silent
+if [ $? -ne 0 ]; then
+  echo "❌ Carousel unit tests failed! Please fix before committing."
+  exit 1
+fi
+
+echo "✅ High-quality unit tests passed!"
+
+# Возвращаемся в корень проекта
+cd ..
+
+# Автоматически исправляем markdown файлы
+npm run lint:md:fix
+
+# Добавляем исправленные файлы в коммит
+git add *.md
+
+echo "✅ Pre-commit checks completed!"

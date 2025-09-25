@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLogoutMutation } from '../api/authApi';
+import { useAppDispatch } from '@/shared/state/store';
+import { clearSessionExpired } from '@/shared/state/slices/authSlice';
 
 type LogoutReturn = {
   isOpen: boolean;
@@ -15,6 +17,7 @@ export function useLogout(): LogoutReturn {
   const [isOpen, setIsOpen] = useState(false);
   const [logout, { isLoading, isError, reset }] = useLogoutMutation();
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const openModal = (): void => setIsOpen(true);
   const closeModal = (): void => {
@@ -25,6 +28,8 @@ export function useLogout(): LogoutReturn {
   const confirmLogout = async (): Promise<void> => {
     try {
       await logout().unwrap();
+      // Сбрасываем состояние истечения сессии при выходе
+      dispatch(clearSessionExpired());
       router.push('/sign-in');
       closeModal();
     } catch (error) {

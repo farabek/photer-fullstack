@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 
 import { baseApi } from '@/shared/lib/baseApi';
 import { modalReducer } from './slices/modalSlice';
+import { authReducer } from './slices/authSlice';
 import { postReducer } from '@/features/posts/model/postSlice';
 import { countryApi } from '@/features/edit-profile/api/countryApi';
 import { genInfoReducer } from '@/features/edit-profile/model/genInfoSlice';
@@ -13,6 +14,7 @@ import { genInfoReducer } from '@/features/edit-profile/model/genInfoSlice';
 export const store = configureStore({
   reducer: {
     modal: modalReducer,
+    auth: authReducer,
     post: postReducer,
     genInfo: genInfoReducer,
     [countryApi.reducerPath]: countryApi.reducer,

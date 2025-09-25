@@ -11,11 +11,12 @@ import { authApi } from '@/features/auth/api/authApi';
 import { LogoutButton } from '../logout-button/LogoutButton';
 import { LogoutModal } from '@/features/auth/ui/login-form/LogoutForm';
 import { useLogout } from '@/features/auth/hooks/useLogout';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/shared/state/store';
 import { getCookie } from '@/shared/lib/cookies';
 import { appLogger } from '@/shared/lib/appLogger';
 import { createSelector } from '@reduxjs/toolkit';
+import { clearSessionExpired } from '@/shared/state/slices/authSlice';
 
 // Memoized selector to avoid returning a new object reference each time
 const getMeSelector = authApi.endpoints.getMe.select();
@@ -28,6 +29,7 @@ const selectAuthData = createSelector([getMeSelector], (queryState) => ({
 export const Sidebar = (): React.JSX.Element | null => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isClient, setIsClient] = useState(false);
+  const dispatch = useDispatch();
 
   // Флаг монтирования клиента для предотвращения гидратационных рассинхронов
   useEffect(() => {
@@ -61,6 +63,11 @@ export const Sidebar = (): React.JSX.Element | null => {
   // ВАЖНО: до монтирования клиента считаем неавторизованным, чтобы SSR и клиент совпадали
   // Данные пользователя получаем из кэша RTK Query (загружаются в AuthInitializer)
   const isAuthenticated = isClient ? !!hasToken : false;
+
+  // Получаем состояние истечения сессии
+  const sessionExpired = useSelector(
+    (state: RootState) => state.auth.sessionExpired
+  );
 
   // Логируем монтирование Sidebar
   useEffect(() => {
@@ -132,8 +139,13 @@ export const Sidebar = (): React.JSX.Element | null => {
       hasToken: !!hasToken,
       hasData: !!data,
       isAuthenticated,
+      sessionExpired,
       timestamp: new Date().toISOString(),
     });
+    // Сбрасываем состояние истечения сессии при открытии модального окна выхода
+    if (sessionExpired) {
+      dispatch(clearSessionExpired());
+    }
     openModal();
   };
 
@@ -152,8 +164,13 @@ export const Sidebar = (): React.JSX.Element | null => {
       hasToken: !!hasToken,
       hasData: !!data,
       isAuthenticated,
+      sessionExpired,
       timestamp: new Date().toISOString(),
     });
+    // Сбрасываем состояние истечения сессии при переходе на страницу входа
+    if (sessionExpired) {
+      dispatch(clearSessionExpired());
+    }
     window.location.href = '/sign-in';
   };
 
@@ -252,9 +269,8 @@ export const Sidebar = (): React.JSX.Element | null => {
               <span className="regular-text-14 text-light-100">Loading...</span>
             )}
           </div>
-        ) : isAuthenticated ? (
-          // Для авторизованных пользователей - кнопка выхода
-          // Используем только isAuthenticated, не зависим от data
+        ) : isAuthenticated && !sessionExpired ? (
+          // Для авторизованных пользователей с активной сессией - кнопка выхода
           <>
             <LogoutButton
               hideText={!isSidebarOpen}
@@ -266,6 +282,44 @@ export const Sidebar = (): React.JSX.Element | null => {
               onConfirmed={confirmLogout}
               onCanceled={handleLogoutModalClose}
             />
+          </>
+        ) : isAuthenticated && sessionExpired ? (
+          // Для авторизованных пользователей с истекшей сессией - сообщение и кнопка повторного входа
+          <>
+            <div className="flex flex-col gap-2">
+              {/* Сообщение об истечении сессии */}
+              {isSidebarOpen && (
+                <div className="px-4 py-2">
+                  <span className="regular-text-12 text-yellow-400">
+                    Сессия истекла
+                  </span>
+                </div>
+              )}
+              {/* Кнопка повторного входа */}
+              <Button
+                variant="text"
+                className="text-light-100 hover:text-light-100 active:text-light-100 focus:text-light-100 w-full cursor-pointer border-none"
+                onClick={handleSignInClick}
+              >
+                <div className="flex items-center gap-3">
+                  <IconSprite iconName="person-outline" />
+                  {isSidebarOpen && (
+                    <span className="regular-text-14">Войти снова</span>
+                  )}
+                </div>
+              </Button>
+              {/* Кнопка выхода (очистка cookies) */}
+              <LogoutButton
+                hideText={!isSidebarOpen}
+                openModal={handleLogoutModalOpen}
+              />
+              <LogoutModal
+                open={isOpen}
+                userEmail={data?.email || ''}
+                onConfirmed={confirmLogout}
+                onCanceled={handleLogoutModalClose}
+              />
+            </div>
           </>
         ) : (
           // Для неавторизованных пользователей - кнопка входа

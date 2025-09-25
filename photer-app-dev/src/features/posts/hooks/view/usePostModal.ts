@@ -41,14 +41,6 @@ export const usePostModal = ({
   // чтобы избежать ложноположительных срабатываний из-за кэширования данных.
   const isOwner = userId ? post?.owner.userId === userId : false;
 
-  console.log('🔐 [POST MODAL] Auth check', {
-    userId,
-    postOwnerId: post?.owner.userId,
-    isOwner,
-    postId: post?.id,
-    timestamp: new Date().toISOString(),
-  });
-
   const handleDeleteConfirm = () => {
     setIsDeleteModalOpen(true);
   };

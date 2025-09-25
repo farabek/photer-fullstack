@@ -42,6 +42,19 @@ export const ProfileCard = ({
 
   // Логируем инициализацию ProfileCard
   useEffect(() => {
+    console.log('=== PROFILE CARD DEBUG ===', {
+      isOwner,
+      isAuthorized,
+      profileId,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      profileData: profile,
+      userData: user,
+      postsData: posts,
+      isEditProfile,
+      timestamp: new Date().toISOString(),
+    });
+
     appLogger.profileSettings('PROFILE_CARD_INITIALIZED', {
       isOwner,
       isAuthorized,
@@ -134,6 +147,30 @@ export const ProfileCard = ({
       : profileData.avatarUrl
     : null;
 
+  // Вычисляем правильное количество публикаций
+  const correctPublications = posts?.totalCount || posts?.items?.length || profile?.publications || 0;
+
+  // Логи для диагностики проблем с аватаром и статистикой
+  console.log('=== AVATAR & STATS DEBUG ===', {
+    profileData,
+    avatarUrl,
+    rawAvatarUrl: profileData?.avatarUrl,
+    isAvatarArray: Array.isArray(profileData?.avatarUrl),
+    following: profile?.following,
+    followers: profile?.followers,
+    publications: profile?.publications,
+    correctPublications,
+    postsCount: posts?.items?.length || 0,
+    postsTotalCount: posts?.totalCount || 0,
+    username,
+    fullName,
+    // Детальная диагностика данных постов
+    firstPost: posts?.items?.[0],
+    firstPostOwner: posts?.items?.[0]?.owner,
+    firstPostAvatarUrl: posts?.items?.[0]?.owner?.avatarUrl,
+    timestamp: new Date().toISOString(),
+  });
+
   return (
     <div>
       <div className={'flex gap-9'}>
@@ -167,7 +204,7 @@ export const ProfileCard = ({
           <ProfileStats
             following={profile?.following || 0}
             followers={profile?.followers || 0}
-            publications={profile?.publications || 0}
+            publications={correctPublications}
           />
           <div>
             <p>

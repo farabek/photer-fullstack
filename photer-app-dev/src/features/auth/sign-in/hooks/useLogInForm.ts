@@ -12,6 +12,7 @@ import { LogInSchema, logInSchema } from './validationSchema';
 export function useLogInForm(): {
   register: ReturnType<typeof useForm<LogInSchema>>['register'];
   handleSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  setValue: ReturnType<typeof useForm<LogInSchema>>['setValue'];
   isDirty: boolean;
   hasLoginError: boolean;
   loginErrorMessage: string;
@@ -25,6 +26,7 @@ export function useLogInForm(): {
   const {
     register,
     handleSubmit,
+    setValue,
     reset,
     formState: { isDirty, errors },
   } = useForm<LogInSchema>({
@@ -78,6 +80,7 @@ export function useLogInForm(): {
   return {
     register,
     handleSubmit: handleSubmit(onSubmit),
+    setValue,
     isDirty,
     hasLoginError: isError,
     loginErrorMessage,

@@ -5,7 +5,6 @@ import { useSelector } from 'react-redux';
 import { Posts } from '../../lib/post.types';
 import { cachedProfilePages, setPostCreated } from '../../model/postSlice';
 import { useInfiniteScroll } from './useInfiniteScroll';
-import { authApi } from '@/features/auth/api/authApi';
 
 type Props = {
   ssrPosts?: Posts;
@@ -34,12 +33,6 @@ export const usePostsList = ({
 
   const postCreated = useSelector((state: RootState) => state.post.postCreated);
 
-  // Получаем информацию об авторизации
-  const userId = useSelector(
-    (state: RootState) => authApi.endpoints.getMe.select()(state).data?.userId
-  );
-  const isAuthenticated = !!userId;
-
   const postsFromCache = useSelector(
     (state: RootState) =>
       postsApi.endpoints.getProfilePosts.select({
@@ -48,39 +41,8 @@ export const usePostsList = ({
       })(state).data
   );
 
-  // Функция для проверки свежести кэша
-  const isCacheStale = (cacheData: Posts | undefined): boolean => {
-    if (!cacheData || !cacheData.items || cacheData.items.length === 0) {
-      return false;
-    }
-
-    // Если пользователь не авторизован, но кэш содержит данные - считаем кэш устаревшим
-    if (
-      !isAuthenticated &&
-      cacheData.items.some((item) => item.owner.userId === profileId)
-    ) {
-      console.log(
-        'Cache is stale: user not authenticated but cache has private data'
-      );
-      return true;
-    }
-
-    // Если пользователь авторизован, но кэш создан до авторизации
-    if (isAuthenticated && cacheData.items.some((item) => !item.owner.userId)) {
-      console.log(
-        'Cache is stale: authenticated user but cache has incomplete data'
-      );
-      return true;
-    }
-
-    return false;
-  };
-
   const [posts, setPosts] = useState<Posts | undefined>(
-    postsFromCache &&
-      postsFromCache.items &&
-      postsFromCache.items.length > 0 &&
-      !isCacheStale(postsFromCache)
+    postsFromCache && postsFromCache.items && postsFromCache.items.length > 0
       ? postsFromCache
       : ssrPosts
   );
@@ -124,21 +86,16 @@ export const usePostsList = ({
       timestamp: new Date().toISOString(),
     });
 
-    // Priority: fresh postsFromCache > current posts (if cache invalidated) > ssrPosts (fallback)
+    // Priority: postsFromCache (if has data) > ssrPosts (if post not created) > current posts
     if (
       postsFromCache &&
       postsFromCache.items &&
-      postsFromCache.items.length > 0 &&
-      !isCacheStale(postsFromCache) // Проверяем свежесть кэша
+      postsFromCache.items.length > 0
     ) {
-      console.log(
-        '✅ [USE POSTS LIST] Setting posts from fresh cache (has data)',
-        {
-          cacheItemsCount: postsFromCache.items.length,
-          isAuthenticated,
-          timestamp: new Date().toISOString(),
-        }
-      );
+      console.log('Setting posts from cache (has data)', {
+        cacheDescription: postsFromCache.items[0]?.description,
+        timestamp: new Date().toISOString(),
+      });
       setPosts(postsFromCache);
     } else if (
       postsFromCache &&
@@ -148,74 +105,17 @@ export const usePostsList = ({
     ) {
       // Empty cache - use it only if post was created (to clear old data)
       if (postCreated) {
-        console.log(
-          '🗂️ [USE POSTS LIST] Setting empty cache (postCreated:',
-          postCreated,
-          ')'
-        );
+        console.log('Setting empty cache (postCreated:', postCreated, ')');
         setPosts(postsFromCache);
       }
-    } else if (
-      postsFromCache &&
-      postsFromCache.items &&
-      postsFromCache.items.length > 0 &&
-      isCacheStale(postsFromCache) // Кэш устарел
-    ) {
-      console.log(
-        '⚠️ [USE POSTS LIST] Ignoring stale cache, waiting for fresh data',
-        {
-          isAuthenticated,
-          cacheItemsCount: postsFromCache.items.length,
-          hasOwnerIds: postsFromCache.items.some((item) => item.owner.userId),
-          timestamp: new Date().toISOString(),
-        }
-      );
-      // НЕ устанавливаем устаревший кэш, ждем свежие данные
-    } else if (
-      !postsFromCache && // Кэш не загружен или инвалидирован
-      posts && // У нас есть текущие посты
-      posts.items &&
-      posts.items.length > 0
-    ) {
-      // Сохраняем текущие посты, не сбрасываем на SSR
-      console.log(
-        '🔄 [USE POSTS LIST] Keeping current posts (cache invalidated, waiting for refresh)',
-        {
-          currentPostsCount: posts.items.length,
-          timestamp: new Date().toISOString(),
-        }
-      );
-      // НЕ вызываем setPosts - оставляем текущие данные
     } else if (
       ssrPosts &&
       ssrPosts.items &&
       ssrPosts.items.length > 0 &&
-      !postCreated && // Игнорируем SSR данные если пост был создан
-      !posts // Используем SSR только если у нас нет текущих постов
+      !postCreated // Игнорируем SSR данные если пост был создан
     ) {
-      console.log(
-        '📄 [USE POSTS LIST] Setting posts from SSR (postCreated:',
-        postCreated,
-        ')',
-        {
-          ssrItemsCount: ssrPosts.items.length,
-          timestamp: new Date().toISOString(),
-        }
-      );
+      console.log('Setting posts from SSR (postCreated:', postCreated, ')');
       setPosts(ssrPosts);
-    } else {
-      console.log('❓ [USE POSTS LIST] No data source matched', {
-        hasPostsFromCache: !!postsFromCache,
-        cacheItemsCount: postsFromCache?.items?.length || 0,
-        isCacheStale: postsFromCache ? isCacheStale(postsFromCache) : false,
-        hasCurrentPosts: !!posts,
-        currentPostsCount: posts?.items?.length || 0,
-        hasSsrPosts: !!ssrPosts,
-        ssrPostsCount: ssrPosts?.items?.length || 0,
-        postCreated,
-        isAuthenticated,
-        timestamp: new Date().toISOString(),
-      });
     }
 
     // Сбрасываем флаг postCreated после обновления
@@ -224,6 +124,22 @@ export const usePostsList = ({
       dispatch(setPostCreated(false));
     }
   }, [postsFromCache, ssrPosts, postCreated, dispatch]);
+
+  // Effect to handle cache invalidation and trigger refetch
+  useEffect(() => {
+    // If we have no cached data but should have some, trigger a refetch
+    // This handles the case when cache is invalidated after post editing
+    if (!postsFromCache && !isFetching) {
+      console.log(
+        'Cache appears to be invalidated, triggering refetch for profile:',
+        profileId
+      );
+      getProfilePosts({
+        profileId,
+        pageNumber: pageNumber || 1,
+      });
+    }
+  }, [postsFromCache, isFetching, getProfilePosts, profileId, pageNumber]);
 
   useEffect(() => {
     if (!postsFromCache && ssrPosts) {
@@ -237,27 +153,6 @@ export const usePostsList = ({
         ssrPosts
       );
       dispatch(thunk);
-    }
-
-    // Если кэш устарел, принудительно перезагружаем данные
-    if (postsFromCache && isCacheStale(postsFromCache)) {
-      console.log(
-        '🔄 [USE POSTS LIST] Force reloading data due to stale cache',
-        {
-          profileId,
-          isAuthenticated,
-          postsFromCache: postsFromCache
-            ? {
-                itemsCount: postsFromCache.items?.length || 0,
-                hasOwnerIds:
-                  postsFromCache.items?.some((item) => item.owner.userId) ||
-                  false,
-              }
-            : null,
-        }
-      );
-      dispatch(cachedProfilePages(1));
-      getProfilePosts({ profileId, pageNumber: 1 });
     }
     // Проверяем, что у нас есть посты в кеше и они принадлежат другому пользователю
     // Добавляем проверку на существование items и его длину для предотвращения ошибок
@@ -280,7 +175,6 @@ export const usePostsList = ({
     profileId,
     pageNumber,
     getProfilePosts,
-    isAuthenticated,
   ]);
 
   const hasMore = posts && posts?.page < posts?.pagesCount;

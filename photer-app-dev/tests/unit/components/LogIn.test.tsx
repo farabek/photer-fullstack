@@ -18,13 +18,16 @@ jest.mock('@/widgets/card/card', () => ({
 
 // Mock компонента Input
 jest.mock('@/shared/ui/input/Input', () => ({
-  Input: ({ label, errorMessage, ...props }: any) => (
-    <div>
-      <label>{label}</label>
-      <input {...props} />
-      {errorMessage && <span className="error">{errorMessage}</span>}
-    </div>
-  ),
+  Input: ({ label, errorMessage, ...props }: any) => {
+    const inputId = `input-${label?.toLowerCase()}`;
+    return (
+      <div>
+        <label htmlFor={inputId}>{label}</label>
+        <input id={inputId} {...props} />
+        {errorMessage && <span className="error">{errorMessage}</span>}
+      </div>
+    );
+  },
 }));
 
 // Mock компонента Button
@@ -64,6 +67,7 @@ describe('🧪 LogIn Component', () => {
     handleSubmit: jest.fn(),
     isDirty: false,
     hasLoginError: false,
+    loginErrorMessage: '',
     formErrors: {},
     isLoading: false,
   };
@@ -77,22 +81,23 @@ describe('🧪 LogIn Component', () => {
     test('должен корректно рендериться', () => {
       render(<LogIn />);
 
-      expect(screen.getByText('Sign In')).toBeInTheDocument();
+      // Проверяем заголовок (h1)
+      expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
       expect(screen.getByTestId('card')).toBeInTheDocument();
       expect(screen.getByTestId('oauth-links')).toBeInTheDocument();
       expect(screen.getByLabelText('Email')).toBeInTheDocument();
       expect(screen.getByLabelText('Password')).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: 'Sign In' })
-      ).toBeInTheDocument();
+      // Проверяем кнопку
+      expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument();
     });
 
     test('должен показывать все необходимые элементы формы', () => {
       render(<LogIn />);
 
-      expect(screen.getByText("Don't have an account?")).toBeInTheDocument();
-      expect(screen.getByText('Sign Up')).toBeInTheDocument();
-      expect(screen.getByText('Forgot Password')).toBeInTheDocument();
+      // Проверяем основные элементы формы (ссылки проверяются в отдельных тестах)
+      expect(screen.getByRole('link', { name: 'Sign Up' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Forgot Password' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Resend Confirmation' })).toBeInTheDocument();
     });
   });
 
@@ -107,7 +112,7 @@ describe('🧪 LogIn Component', () => {
 
       expect(screen.getByTestId('spinner')).toBeInTheDocument();
       expect(screen.getByText('Вход в систему...')).toBeInTheDocument();
-      expect(screen.queryByText('Sign In')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument();
     });
 
     test('должен показывать обычную кнопку когда не загружается', () => {
@@ -120,7 +125,7 @@ describe('🧪 LogIn Component', () => {
 
       expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
       expect(screen.queryByText('Вход в систему...')).not.toBeInTheDocument();
-      expect(screen.getByText('Sign In')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument();
     });
   });
 
@@ -233,20 +238,25 @@ describe('🧪 LogIn Component', () => {
     test('должен содержать ссылку на страницу регистрации', () => {
       render(<LogIn />);
 
-      const signUpLink = screen.getByText('Sign Up');
+      const signUpLink = screen.getByRole('link', { name: 'Sign Up' });
       expect(signUpLink).toBeInTheDocument();
-      expect(signUpLink.closest('a')).toHaveAttribute('href', '/sign-up');
+      expect(signUpLink).toHaveAttribute('href', '/sign-up');
     });
 
     test('должен содержать ссылку на восстановление пароля', () => {
       render(<LogIn />);
 
-      const forgotPasswordLink = screen.getByText('Forgot Password');
+      const forgotPasswordLink = screen.getByRole('link', { name: 'Forgot Password' });
       expect(forgotPasswordLink).toBeInTheDocument();
-      expect(forgotPasswordLink.closest('a')).toHaveAttribute(
-        'href',
-        '/forgot-password'
-      );
+      expect(forgotPasswordLink).toHaveAttribute('href', '/forgot-password');
+    });
+
+    test('должен содержать ссылку на повторную отправку подтверждения', () => {
+      render(<LogIn />);
+
+      const resendLink = screen.getByRole('link', { name: 'Resend Confirmation' });
+      expect(resendLink).toBeInTheDocument();
+      expect(resendLink).toHaveAttribute('href', '/resend-link');
     });
   });
 
@@ -282,10 +292,11 @@ describe('🧪 LogIn Component', () => {
     test('должен передавать все необходимые пропсы в дочерние компоненты', () => {
       render(<LogIn />);
 
-      // Проверяем, что все компоненты получили необходимые пропсы
+      // Проверяем, что основные компоненты присутствуют
       expect(screen.getByTestId('card')).toBeInTheDocument();
       expect(screen.getByTestId('oauth-links')).toBeInTheDocument();
-      expect(screen.getByTestId('spinner')).toBeInTheDocument();
+      // Спиннер появляется только в состоянии загрузки
+      expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
     });
   });
 
