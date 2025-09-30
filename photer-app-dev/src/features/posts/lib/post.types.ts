@@ -8,6 +8,7 @@ export type PostType = {
   updatedAt: string;
   status: boolean;
   photos: string[];
+  latestPostId?: string; // Real post ID for virtual posts (for comments, etc.)
   owner: {
     userId: string;
     userName: string;

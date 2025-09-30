@@ -98,7 +98,7 @@ export default async function HomePage(): Promise<ReactElement> {
       userData.photos.push(photoToAdd);
 
       // Сохраняем ссылку на пост для получения описания
-      if (!userData.posts.some((p) => p.id === post.id)) {
+      if (!userData.posts.some((p: typeof post) => p.id === post.id)) {
         userData.posts.push(post);
       }
 
@@ -135,7 +135,7 @@ export default async function HomePage(): Promise<ReactElement> {
   const posts = Array.from(userPhotos.values()).map((userData) => {
     // Используем описание последнего поста или общее описание
     const sortedPosts = userData.posts.sort(
-      (a, b) =>
+      (a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
     const lastPostDescription =
@@ -151,6 +151,7 @@ export default async function HomePage(): Promise<ReactElement> {
       updatedAt: userData.latestCreatedAt,
       status: true,
       photos: userData.photos,
+      latestPostId: userData.latestPostId, // Real post ID for comments
       owner: {
         userId: userData.userId,
         userName: userData.userName,

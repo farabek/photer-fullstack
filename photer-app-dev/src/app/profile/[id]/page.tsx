@@ -64,7 +64,7 @@ export default async function SSRProfilePage({
       totalCount: posts?.totalCount || 0,
       hasPosts: !!(posts?.items && posts.items.length > 0),
       postIds:
-        posts?.items?.map((p) => ({
+        posts?.items?.map((p: any) => ({
           id: p.id,
           photos: p.photos?.length || 0,
         })) || [],

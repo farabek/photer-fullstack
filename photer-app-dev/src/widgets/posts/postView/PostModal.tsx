@@ -219,7 +219,11 @@ export const PostModal = ({
           isAuthorized={!!userId}
           post={displayPost}
           isOwner={isOwner}
-          realPostId={isVirtualPost ? post.id : undefined}
+          realPostId={
+            isVirtualPost
+              ? post.latestPostId || post.id // Use latestPostId for virtual posts from home page
+              : undefined
+          }
         >
           {isOwner && !isVirtualPostFromMainPage && (
             <EllipsisMenu

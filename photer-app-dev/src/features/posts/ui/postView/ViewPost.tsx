@@ -90,20 +90,18 @@ export const ViewPost = ({
 
           <div className="border-dark-100 flex flex-col gap-4 border-b px-6 pt-4 pb-2">
             <PostDescription post={post} />
-            {/* Show comments for real posts and virtual posts from profile */}
-            {(!post.id.startsWith('virtual-') ||
-              post.id.includes('profile')) && (
-              <CommentsList
-                postId={realPostId || post.id}
-                isAuthorized={isAuthorized}
-              />
-            )}
+            {/* Show comments for all posts - use realPostId for virtual posts */}
+            <CommentsList
+              postId={realPostId || post.id}
+              isAuthorized={isAuthorized}
+            />
           </div>
         </div>
 
         {/* Низ: инфо + форма добавления комментария */}
         <div className="border-dark-100 flex flex-col pt-4">
           <PostInfo createdDate={post.createdAt} isAuthorized={isAuthorized} />
+          {/* Show AddComment only for owner and not for virtual posts from main page */}
           {isOwner &&
             (!post.id.startsWith('virtual-') ||
               post.id.includes('profile')) && (
